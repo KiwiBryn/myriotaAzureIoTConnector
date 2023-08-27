@@ -29,7 +29,7 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.Connector
         }
 
         [Function("MyriotaUplinkMessageProcessor")]
-        public void Run([QueueTrigger("uplink", Connection = "AzureFunctionsStorage")] string myQueueItem)
+        public void MyriotaUplinkMessageProcessor([QueueTrigger("uplink", Connection = "AzureFunctionsStorage")] string myQueueItem)
         {
             _logger.LogInformation($"C# Queue trigger function processed: {myQueueItem}");
         }
