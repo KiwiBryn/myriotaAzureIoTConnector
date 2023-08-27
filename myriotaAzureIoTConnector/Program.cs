@@ -25,10 +25,14 @@ namespace devMobile.IoT.SwarmSpaceAzureIoTConnector.Connector
         static async Task Main(string[] args)
         {
             var host = new HostBuilder()
-                .ConfigureFunctionsWorkerDefaults()
-                .Build();
+               .ConfigureFunctionsWorkerDefaults()
+               .UseConsoleLifetime()
+               .Build();
 
-            host.Run();
+            using (host)
+            {
+                await host.RunAsync();
+            }
         }
     }
 }
