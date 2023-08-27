@@ -15,16 +15,57 @@
 // Used new Visual Studio feature "Edit->Paste Special->Paste JSON as Clases" functionality
 //
 //---------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+
 
 namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Models
 {
     public class UplinkPayloadWebDto
     {
         public string EndpointRef { get; set; }
-        public long Timestamp { get; set; } 
+        public ulong Timestamp { get; set; }
         public string Data { get; set; } // Embedded JSON
         public string Id { get; set; }
         public string CertificateUrl { get; set; }
         public string Signature { get; set; }
+    }
+
+    public class WebData
+    {
+        public List<WebPacket> Packets { get; set; }
+    }
+
+    public class WebPacket
+    {
+        public string TerminalId { get; set; }
+
+        public ulong Timestamp { get; set; }
+
+        public string Value { get; set; }
+    }
+
+    public class UplinkPayloadQueueDto
+    {
+        public string EndpointRef { get; set; }
+        public DateTime Timestamp { get; set; }
+        public QueueData Data { get; set; }
+        public string Id { get; set; }
+        public Uri Certificate { get; set; }
+        public string Signature { get; set; }
+    }
+
+    public class QueueData
+    {
+        public List<QueuePacket> Packets { get; set; }
+    }
+
+    public class QueuePacket
+    {
+        public string TerminalId { get; set; }
+
+        public DateTime Timestamp { get; set; }
+
+        public string Value { get; set; }
     }
 }

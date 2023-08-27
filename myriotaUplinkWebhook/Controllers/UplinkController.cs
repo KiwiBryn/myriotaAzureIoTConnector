@@ -45,17 +45,37 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Models.UplinkPayloadWebDto payloadWeb)
         {
+            // Could of used AutoMapper but didn't seem worth it for one place
+            Models.UplinkPayloadQueueDto payloadQueue = new Models.UplinkPayloadQueueDto
+            {
+                EndpointRef = payloadWeb.EndpointRef,
+                Timestamp = DateTime.UnixEpoch.AddSeconds(payloadWeb.Timestamp),
+                Id = payloadWeb.Id,
+                Data = new Models.QueueData
+                {
+                    Packets = new System.Collections.Generic.List<Models.QueuePacket>()
+                },
+                Certificate = new Uri(payloadWeb.CertificateUrl),
+                Signature = payloadWeb.Signature
+            };
+
+            Models.WebData webData = JsonSerializer.Deserialize<Models.WebData>(payloadWeb.Data);
+
+            foreach (var packet in webData.Packets)
+            {
+                payloadQueue.Data.Packets.Add(new Models.QueuePacket()
+                {
+                    TerminalId = packet.TerminalId,
+                    Timestamp = DateTime.UnixEpoch.AddMilliseconds(packet.Timestamp),
+                    Value = packet.Value
+                });
+            }
+
             _logger.LogInformation("SendAsync queue name:{QueueName}", _applicationSettings.QueueName);
 
             QueueClient queueClient = _queueServiceClient.GetQueueClient(_applicationSettings.QueueName);
 
-            var serializeOptions = new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            };
-
-            await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadWeb, serializeOptions)));
+            await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadQueue)));
 
             return this.Ok();
         }
