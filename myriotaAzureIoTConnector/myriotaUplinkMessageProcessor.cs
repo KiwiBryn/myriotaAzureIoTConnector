@@ -17,7 +17,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
 
 
-namespace devMobile.IoT.myriotaAzureIoTConnector.Connector
+namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public class myriotaUplinkMessageProcessor
     {
