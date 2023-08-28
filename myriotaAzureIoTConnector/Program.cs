@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Hosting;
 
 
-namespace devMobile.IoT.SwarmSpaceAzureIoTConnector.Connector
+namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     internal class Program
     {
