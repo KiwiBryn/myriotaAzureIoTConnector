@@ -1,4 +1,3 @@
-
 // Copyright (c) August 2023, devMobile Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,12 +41,13 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
             _logger = logger;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Post([FromBody] Models.UplinkPayloadWebDto payloadWeb)
+        [HttpPost("{application}")]
+        public async Task<IActionResult> Post([FromRoute]string application, [FromBody] Models.UplinkPayloadWebDto payloadWeb)
         {
             // Could of used AutoMapper but didn't seem worth it for one place
             Models.UplinkPayloadQueueDto payloadQueue = new Models.UplinkPayloadQueueDto
             {
+                Application = application,  
                 EndpointRef = payloadWeb.EndpointRef,
                 Timestamp = DateTime.UnixEpoch.AddSeconds(payloadWeb.Timestamp),
                 Id = payloadWeb.Id,
