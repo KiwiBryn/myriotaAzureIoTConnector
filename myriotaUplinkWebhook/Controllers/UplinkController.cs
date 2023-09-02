@@ -44,38 +44,61 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
         [HttpPost("{application}")]
         public async Task<IActionResult> Post([FromRoute]string application, [FromBody] Models.UplinkPayloadWebDto payloadWeb)
         {
-            // Could of used AutoMapper but didn't seem worth it for one place
-            Models.UplinkPayloadQueueDto payloadQueue = new Models.UplinkPayloadQueueDto
+            try
             {
-                Application = application,  
-                EndpointRef = payloadWeb.EndpointRef,
-                Timestamp = DateTime.UnixEpoch.AddSeconds(payloadWeb.Timestamp),
-                Id = payloadWeb.Id,
-                Data = new Models.QueueData
+                // Could of used AutoMapper but didn't seem worth it for one place
+                Models.UplinkPayloadQueueDto payloadQueue = new Models.UplinkPayloadQueueDto
                 {
-                    Packets = new System.Collections.Generic.List<Models.QueuePacket>()
-                },
-                Certificate = new Uri(payloadWeb.CertificateUrl),
-                Signature = payloadWeb.Signature
-            };
+                    Application = application,
+                    EndpointRef = payloadWeb.EndpointRef,
+                    PayloadReceivedAtUtc = DateTime.UnixEpoch.AddSeconds(payloadWeb.Timestamp),
+                    PayloadArrivedAtUtc = DateTime.UtcNow,
+                    Id = payloadWeb.Id,
+                    Data = new Models.QueueData
+                    {
+                        Packets = new System.Collections.Generic.List<Models.QueuePacket>()
+                    },
+                    CertificateUrl = new Uri(payloadWeb.CertificateUrl),
+                    Signature = payloadWeb.Signature
+                };
 
-            Models.WebData webData = JsonSerializer.Deserialize<Models.WebData>(payloadWeb.Data);
+                Models.WebData webData;
 
-            foreach (var packet in webData.Packets)
-            {
-                payloadQueue.Data.Packets.Add(new Models.QueuePacket()
+                // special case for broken payload in payloadWeb.Data
+                try
                 {
-                    TerminalId = packet.TerminalId,
-                    Timestamp = DateTime.UnixEpoch.AddMilliseconds(packet.Timestamp),
-                    Value = packet.Value
-                });
+                    webData = JsonSerializer.Deserialize<Models.WebData>(payloadWeb.Data);
+                }
+                catch( JsonException jex)
+                {                     
+                    _logger.LogError(jex, "UplinkController.Post JsonException Deserialising payloadWeb.Data");
+
+                    return this.BadRequest("JsonException Deserialising payloadWeb.Data");
+                }
+
+                foreach (var packet in webData.Packets)
+                {
+                    payloadQueue.Data.Packets.Add(new Models.QueuePacket()
+                    {
+                        TerminalId = packet.TerminalId,
+                        Timestamp = DateTime.UnixEpoch.AddMilliseconds(packet.Timestamp),
+                        Value = packet.Value
+                    });
+                }
+
+                // included EndpointRef for correlation as uplink message processed
+                _logger.LogInformation("SendAsync queue name:{QueueName} endpoint ref:{EndpointRef}", _applicationSettings.QueueName, payloadWeb.EndpointRef);
+
+                QueueClient queueClient = _queueServiceClient.GetQueueClient(_applicationSettings.QueueName);
+
+                await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadQueue)));
             }
+            catch (Exception ex)
+            {
+               _logger.LogError(ex, "UplinkController.Post failed");
 
-            _logger.LogInformation("SendAsync queue name:{QueueName}", _applicationSettings.QueueName);
-
-            QueueClient queueClient = _queueServiceClient.GetQueueClient(_applicationSettings.QueueName);
-
-            await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadQueue)));
+                return this.BadRequest();
+            }
 
             return this.Ok();
         }

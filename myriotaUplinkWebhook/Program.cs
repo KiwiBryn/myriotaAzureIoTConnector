@@ -36,7 +36,7 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook
 
             builder.Services.AddAzureClients(azureClient =>
             {
-                azureClient.AddQueueServiceClient(builder.Configuration.GetConnectionString("AzureWebApi"));
+                azureClient.AddQueueServiceClient(builder.Configuration.GetConnectionString("UplinkQueueStorage"));
             });
 
             var app = builder.Build();
