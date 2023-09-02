@@ -97,7 +97,7 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
             {
                _logger.LogError(ex, "UplinkController.Post failed");
 
-                return this.BadRequest();
+                return this.StatusCode(500);
             }
 
             return this.Ok();
