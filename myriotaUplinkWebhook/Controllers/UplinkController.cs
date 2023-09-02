@@ -86,8 +86,8 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
                     });
                 }
 
-                // included EndpointRef for correlation as uplink message processed
-                _logger.LogInformation("SendAsync queue name:{QueueName} endpoint ref:{EndpointRef}", _applicationSettings.QueueName, payloadWeb.EndpointRef);
+                // included payload ID for correlation as uplink message processed
+                _logger.LogInformation("SendAsync queue name:{QueueName} payload ID:{EndpointRef}", _applicationSettings.QueueName, payloadWeb.Id);
 
                 QueueClient queueClient = _queueServiceClient.GetQueueClient(_applicationSettings.QueueName);
 
