@@ -14,16 +14,40 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+
+
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
-
-    public class AzureIotHub
-    {
-        public string ConnectionString { get; set; } = string.Empty;
-    }
-
     public class AzureIoT
     {
         public AzureIotHub AzureIoTHub { get; set; }
+    }
+
+    public class AzureIotHub
+    {
+        [JsonConverter(typeof(StringEnumConverter))]
+        public AzureIotHubConnectionType ConnectionType { get; set; }
+
+        public string ConnectionString { get; set; } = string.Empty;
+
+        public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
+    }
+
+    public enum AzureIotHubConnectionType
+    {
+        Undefined = 0,
+        DeviceConnectionString,
+        DeviceProvisioningService
+    }
+
+    public class AzureDeviceProvisioningService
+    {
+        public string GlobalDeviceEndpoint { get; set; } = string.Empty;
+
+        public string IdScope { get; set; } = string.Empty;
+
+        public string GroupEnrollmentKey { get; set; } = string.Empty;
     }
 }
