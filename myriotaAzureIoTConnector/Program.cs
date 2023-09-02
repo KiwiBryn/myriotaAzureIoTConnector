@@ -15,7 +15,10 @@
 //---------------------------------------------------------------------------------
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
@@ -24,14 +27,33 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     {
         static async Task Main(string[] args)
         {
-            var host = new HostBuilder()
-               .ConfigureFunctionsWorkerDefaults()
-               .UseConsoleLifetime()
-               .Build();
+            var builder = new HostBuilder();
 
-            using (host)
+            builder.ConfigureFunctionsWorkerDefaults()
+               .ConfigureAppConfiguration(c =>
+               {
+                   c.AddUserSecrets<Program>(optional: true, reloadOnChange: false);
+                   c.AddEnvironmentVariables();
+               })
+             .ConfigureLogging((context, l) =>
+             {
+                 l.AddConsole();
+                 l.AddApplicationInsightsWebJobs(o => o.ConnectionString = context.Configuration.GetConnectionString("ApplicationInsights"));
+             })
+            .ConfigureServices(services =>
             {
-                await host.RunAsync();
+                services.AddOptions<Models.AzureIoT>().Configure<IConfiguration>((settings, configuration) =>
+                {
+                    configuration.GetSection("AzureIoT").Bind(settings);
+                });
+            })
+            .UseConsoleLifetime();
+
+            var app = builder.Build();
+
+            using (app)
+            {
+                await app.RunAsync();
             }
         }
     }

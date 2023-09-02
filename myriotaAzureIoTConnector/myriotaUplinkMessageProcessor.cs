@@ -13,25 +13,161 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
+using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Text;
+using System.Threading.Tasks;
+
+using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Functions.Worker;
+
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+using LazyCache;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    public class myriotaUplinkMessageProcessor
+    public class MyriotaUplinkMessageProcessor
     {
-        private readonly ILogger _logger;
+        private static readonly IAppCache _azuredeviceClients = new CachingService();
+        private static ILogger _logger;
+        private static Models.AzureIoT _AzureIoTSettings;
 
-        public myriotaUplinkMessageProcessor(ILoggerFactory loggerFactory)
+
+        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings)
         {
-            _logger = loggerFactory.CreateLogger<myriotaUplinkMessageProcessor>();
+            _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
+            _AzureIoTSettings = azureIoTSettings.Value;
         }
 
-        [Function("MyriotaUplinkMessageProcessor")]
-        public void MyriotaUplinkMessageProcessor([QueueTrigger("uplink", Connection = "AzureFunctionsStorage")] string myQueueItem)
+        [Function("UplinkMessageProcessor")]
+        public async Task UplinkMessageProcessor([QueueTrigger("uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload)
         {
-            _logger.LogInformation($"C# Queue trigger function processed: {myQueueItem}");
+            DeviceClient deviceClient;
+
+            using (_logger.BeginScope("MyriotaUplinkMessageProcessor"))
+            {
+                _logger.LogInformation("Application:{Application} PayloadId:{Id} ReceivedAtUTC:{PayloadReceivedAtUtc:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{PayloadArrivedAtUtc:yyyy:MM:dd HH:mm:ss} Endpoint:{EndpointRef} Packets:{Count}", payload.Application, payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
+
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    foreach (Models.QueuePacket packet in payload.Data.Packets)
+                    {
+                        _logger.LogDebug("TerminalId:{TerminalId} Timestamp:{Timestamp:yyyy:MM:dd HH:mm:ss}  Value:{Value}", packet.TerminalId, packet.Timestamp, packet.Value);
+                    }
+                }
+            }
+
+            foreach (Models.QueuePacket packet in payload.Data.Packets)
+            {
+                Dictionary<string, string> properties = new Dictionary<string, string>();
+
+                try
+                {
+                    deviceClient = await GetOrAddAsync(packet.TerminalId, null);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Uplink- TerminalId:{TerminalId} PayloadId:{payload.Id} GetOrAddAsync failed", packet.TerminalId, payload.Id);
+
+                    throw;
+                }
+
+                JObject telemetryEvent = new JObject();
+
+                telemetryEvent.TryAdd("PayloadReceivedAtUtc", payload.PayloadReceivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
+                telemetryEvent.TryAdd("PayloadArrivedAtUtc", payload.PayloadArrivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
+                telemetryEvent.TryAdd("Application", payload.Application);
+                telemetryEvent.TryAdd("PayloadId", payload.Id);
+                telemetryEvent.TryAdd("EndpointReference", payload.EndpointRef);
+
+                telemetryEvent.TryAdd("TerminalId", packet.TerminalId);
+                telemetryEvent.TryAdd("PacketArrivedAtUtc", packet.Timestamp.ToString("s", CultureInfo.InvariantCulture));
+                telemetryEvent.TryAdd("Value", packet.Value);
+
+                _logger.LogDebug("Uplink-PayloadId:{0} TerminalId:{1} TelemetryEvent:{0}", payload.Id, packet.TerminalId, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
+
+                using (Message ioTHubmessage = new Message(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
+                {
+                    // This is so nasty but can't find a better way
+                    foreach (var property in properties)
+                    {
+                        ioTHubmessage.Properties.TryAdd(property.Key, property.Value);
+                    }
+
+                    ioTHubmessage.Properties.TryAdd("Application", payload.Application.ToString());
+                    ioTHubmessage.Properties.TryAdd("Id", payload.Id.ToString());
+                    ioTHubmessage.Properties.TryAdd("EndpointReference", payload.EndpointRef.ToString());
+                    ioTHubmessage.Properties.TryAdd("TerminalId", packet.TerminalId.ToString());
+
+                    try
+                    {
+                        await deviceClient.SendEventAsync(ioTHubmessage);
+                    }
+                    catch (Exception sex)
+                    {
+                        _logger.LogWarning(sex, "Uplink- TerminalId:{0} PayloadId:{1} SendEventAsync failed", packet.TerminalId, payload.Id);
+
+                        //await Remove(packet.TerminalId);
+                        //await this.Remove(packet.TerminalId);
+
+                        throw;
+                    }
+                }
+            }
         }
+
+        public async Task<DeviceClient> GetOrAddAsync(string terminalId, object context)
+        {
+            DeviceClient deviceClient = null;
+
+            deviceClient = await _azuredeviceClients.GetOrAddAsync<DeviceClient>(terminalId.ToString(), (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId.ToString(), context), memoryCacheEntryOptions);
+
+            return deviceClient;
+        }
+
+        public async Task Remove(string terminalId)
+        {
+            if (_azuredeviceClients.TryGetValue<DeviceClient>(terminalId.ToString(), out DeviceClient deviceClient))
+            {
+                await deviceClient.DisposeAsync();
+            }
+        }
+
+        private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, object context)
+        {
+
+            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(_AzureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
+
+            await deviceClient.OpenAsync();
+
+            return deviceClient;
+        }
+
+
+        private static readonly ITransportSettings[] TransportSettings = new ITransportSettings[]
+        {
+            new AmqpTransportSettings(TransportType.Amqp_Tcp_Only)
+            {
+                AmqpConnectionPoolSettings = new AmqpConnectionPoolSettings()
+                {
+                    Pooling = true,
+                }
+             }
+        };
+
+        private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
+        {
+            Priority = CacheItemPriority.NeverRemove
+        };
+
+
     }
 }
