@@ -46,6 +46,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     configuration.GetSection("AzureIoT").Bind(settings);
                 });
+                services.AddSingleton<IAzureDeviceClientCache, AzureDeviceClientCache>();
             })
             .UseConsoleLifetime();
 

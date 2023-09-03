@@ -26,8 +26,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using LazyCache;
-
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -38,12 +36,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     {
         private static ILogger _logger;
         private static Models.AzureIoT _AzureIoTSettings;
+        private static IAzureDeviceClientCache _azuredeviceClientCache;
 
 
-        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings)
+        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IAzureDeviceClientCache azuredeviceClientCache)
         {
             _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
             _AzureIoTSettings = azureIoTSettings.Value;
+            _azuredeviceClientCache = azuredeviceClientCache;
         }
 
         [Function("UplinkMessageProcessor")]
@@ -127,21 +127,19 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         {
             DeviceClient deviceClient = null;
 
-            deviceClient = await _azuredeviceClients.GetOrAddAsync<DeviceClient>(terminalId.ToString(), (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId.ToString(), context), memoryCacheEntryOptions);
+            deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId, context));
 
             return deviceClient;
         }
 
         private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, object context)
         {
-
             DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(_AzureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
 
             await deviceClient.OpenAsync();
 
             return deviceClient;
         }
-
 
         private static readonly ITransportSettings[] TransportSettings = new ITransportSettings[]
         {
@@ -153,12 +151,5 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
              }
         };
-
-        private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
-        {
-            Priority = CacheItemPriority.NeverRemove
-        };
-
-
     }
 }
