@@ -36,7 +36,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public class MyriotaUplinkMessageProcessor
     {
-        private static readonly IAppCache _azuredeviceClients = new CachingService();
         private static ILogger _logger;
         private static Models.AzureIoT _AzureIoTSettings;
 
@@ -131,14 +130,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             deviceClient = await _azuredeviceClients.GetOrAddAsync<DeviceClient>(terminalId.ToString(), (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId.ToString(), context), memoryCacheEntryOptions);
 
             return deviceClient;
-        }
-
-        public async Task Remove(string terminalId)
-        {
-            if (_azuredeviceClients.TryGetValue<DeviceClient>(terminalId.ToString(), out DeviceClient deviceClient))
-            {
-                await deviceClient.DisposeAsync();
-            }
         }
 
         private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, object context)
