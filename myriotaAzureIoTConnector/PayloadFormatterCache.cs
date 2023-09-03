@@ -65,9 +65,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if (!await blobClient.ExistsAsync())
             { 
-                _logger.LogInformation("PayloadFormatterUplink- UserApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkBlobDefault);
+                _logger.LogInformation("PayloadFormatterUplink- UserApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkDefault);
 
-                blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkBlobDefault);
+                blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkDefault);
             }
 
             BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync();
