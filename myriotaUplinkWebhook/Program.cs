@@ -13,10 +13,11 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
-using Microsoft.Extensions.Azure;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 
 namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook
@@ -42,6 +43,10 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
 
             app.UseHttpsRedirection();
 
