@@ -95,7 +95,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    payloadBytes = Convert.FromBase64String(packet.Value);
+                    payloadBytes = Convert.FromHexString(packet.Value);
                 }
                 catch (FormatException fex)
                 {
