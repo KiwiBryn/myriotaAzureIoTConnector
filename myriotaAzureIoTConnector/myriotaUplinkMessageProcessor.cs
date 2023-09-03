@@ -16,10 +16,14 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.Devices.Client;
+using Microsoft.Azure.Devices.Provisioning.Client;
+using Microsoft.Azure.Devices.Provisioning.Client.Transport;
+using Microsoft.Azure.Devices.Shared;
 using Microsoft.Azure.Functions.Worker;
 
 using Microsoft.Extensions.Caching.Memory;
@@ -35,14 +39,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     public class MyriotaUplinkMessageProcessor
     {
         private static ILogger _logger;
-        private static Models.AzureIoT _AzureIoTSettings;
+        private static Models.AzureIoT _azureIoTSettings;
         private static IAzureDeviceClientCache _azuredeviceClientCache;
 
 
         public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IAzureDeviceClientCache azuredeviceClientCache)
         {
             _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
-            _AzureIoTSettings = azureIoTSettings.Value;
+            _azureIoTSettings = azureIoTSettings.Value;
             _azuredeviceClientCache = azuredeviceClientCache;
         }
 
@@ -114,9 +118,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     {
                         _logger.LogWarning(sex, "Uplink- TerminalId:{0} PayloadId:{1} SendEventAsync failed", packet.TerminalId, payload.Id);
 
-                        //await Remove(packet.TerminalId);
-                        //await this.Remove(packet.TerminalId);
-
                         throw;
                     }
                 }
@@ -127,14 +128,69 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         {
             DeviceClient deviceClient = null;
 
-            deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId, context));
+            switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
+            {
+                case Models.AzureIotHubConnectionType.DeviceConnectionString:
+                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId, context));
+                    break;
+                case Models.AzureIotHubConnectionType.DeviceProvisioningService:
+                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceProvisioningServiceConnectAsync(terminalId, context));
+                    break;
+                default:
+                    _logger.LogError("Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
+
+                    throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
+            }
 
             return deviceClient;
         }
 
         private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, object context)
         {
-            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(_AzureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
+
+            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
+
+            await deviceClient.OpenAsync();
+
+            return deviceClient;
+        }
+
+        private async Task<DeviceClient> AzureIoTHubDeviceProvisioningServiceConnectAsync(string terminalId, object context)
+        {
+            DeviceClient deviceClient;
+
+            string deviceKey;
+            using (var hmac = new HMACSHA256(Convert.FromBase64String(_azureIoTSettings.AzureIoTHub.DeviceProvisioningService.GroupEnrollmentKey)))
+            {
+                deviceKey = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(terminalId)));
+            }
+
+            using (var securityProvider = new SecurityProviderSymmetricKey(terminalId, deviceKey, null))
+            {
+                using (var transport = new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly))
+                {
+                    DeviceRegistrationResult result;
+
+                    ProvisioningDeviceClient provClient = ProvisioningDeviceClient.Create(
+                        _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.GlobalDeviceEndpoint,
+                        _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.IdScope,
+                        securityProvider,
+                        transport);
+
+                    result = await provClient.RegisterAsync();
+  
+                    if (result.Status != ProvisioningRegistrationStatusType.Assigned)
+                    {
+                        _logger.LogWarning("Uplink-DeviceID:{deviceId} RegisterAsync status:{result.Status} failed ", terminalId, result.Status);
+
+                        throw new ApplicationException($"Uplink-DeviceID:{terminalId} RegisterAsync status:{result.Status} failed");
+                    }
+
+                    IAuthenticationMethod authentication = new DeviceAuthenticationWithRegistrySymmetricKey(result.DeviceId, (securityProvider as SecurityProviderSymmetricKey).GetPrimaryKey());
+
+                    deviceClient = DeviceClient.Create(result.AssignedHub, authentication, TransportSettings);
+                }
+            }
 
             await deviceClient.OpenAsync();
 
