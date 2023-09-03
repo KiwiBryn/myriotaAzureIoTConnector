@@ -9,6 +9,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myriotaAzureIoTConnector", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPayloadFormatter", "IPayloadFormatter\IPayloadFormatter.csproj", "{8979E18F-4689-4EDA-9167-E98FE0F1AED5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PayloadFormatters", "PayloadFormatters", "{A7A6DFFF-FDF9-4405-BB36-6846BA48C193}"
+	ProjectSection(SolutionItems) = preProject
+		PayloadFormatters\default.cs = PayloadFormatters\default.cs
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
