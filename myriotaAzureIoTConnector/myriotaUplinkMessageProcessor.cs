@@ -33,6 +33,8 @@ using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using PayloadFormatter;
+
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
@@ -41,13 +43,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         private static ILogger _logger;
         private static Models.AzureIoT _azureIoTSettings;
         private static IAzureDeviceClientCache _azuredeviceClientCache;
+        private readonly IPayloadFormatterCache _payloadFormatterCache;
 
 
-        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IAzureDeviceClientCache azuredeviceClientCache)
+        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IAzureDeviceClientCache azuredeviceClientCache, IPayloadFormatterCache payloadFormatterCache)
         {
             _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
             _azureIoTSettings = azureIoTSettings.Value;
             _azuredeviceClientCache = azuredeviceClientCache;
+            _payloadFormatterCache = payloadFormatterCache;
         }
 
         [Function("UplinkMessageProcessor")]
@@ -68,22 +72,60 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
             }
 
+            IFormatterUplink payloadFormatterUplink;
+
+            try
+            {
+                payloadFormatterUplink = await _payloadFormatterCache.UplinkGetAsync(payload.Application);
+            }
+            catch (CSScriptLib.CompilerException cex)
+            {
+                _logger.LogInformation(cex, "Uplink-PayloadID:{Id} Application:{Application} payload formatter compilation failed", payload.Id, payload.Application);
+
+                throw new InvalidProgramException("Uplink payload formatter invalid or not found");
+            }
+
             foreach (Models.QueuePacket packet in payload.Data.Packets)
             {
                 Dictionary<string, string> properties = new Dictionary<string, string>();
 
+                deviceClient = await GetOrAddAsync(packet.TerminalId, null);
+
+                byte[] payloadBytes;
+
                 try
                 {
-                    deviceClient = await GetOrAddAsync(packet.TerminalId, null);
+                    payloadBytes = Convert.FromBase64String(packet.Value);
                 }
-                catch (Exception ex)
+                catch (FormatException fex)
                 {
-                    _logger.LogError(ex, "Uplink- TerminalId:{TerminalId} PayloadId:{payload.Id} GetOrAddAsync failed", packet.TerminalId, payload.Id);
+                    _logger.LogWarning(fex, "Uplink- TerminalId:{0} Payload:{1} Convert.FromBase64String(payload.Data) failed", packet.TerminalId, payload.Id );
 
-                    throw;
+                    throw new ArgumentException("Convert.FromBase64String(payload.Data) failed");
                 }
 
-                JObject telemetryEvent = new JObject();
+                string payloadText = string.Empty;
+                JObject payloadJson = null;
+
+                if (payloadBytes.Length > 1)
+                {
+                    try
+                    {
+                        payloadText = Encoding.UTF8.GetString(payloadBytes);
+
+                        payloadJson = JObject.Parse(payloadText);
+                    }
+                    catch (FormatException fex)
+                    {
+                        _logger.LogInformation(fex, "Uplink- TerminalId:{0} PayloadId:{1} Encoding.UTF8.GetString(payloadBytes) failed", packet.TerminalId, payload.Id);
+                    }
+                    catch (JsonReaderException jrex)
+                    {
+                        _logger.LogInformation(jrex, "Uplink- TerminalId:{0} PayloadId:{1} JObject.Parse(payloadText) failed", packet.TerminalId, payload.Id);
+                    }
+                }
+
+                JObject telemetryEvent = payloadFormatterUplink.Evaluate(properties, payload.Application, packet.TerminalId, packet.Timestamp, payloadJson, payloadText, payloadBytes);
 
                 telemetryEvent.TryAdd("PayloadReceivedAtUtc", payload.PayloadReceivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
                 telemetryEvent.TryAdd("PayloadArrivedAtUtc", payload.PayloadArrivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
