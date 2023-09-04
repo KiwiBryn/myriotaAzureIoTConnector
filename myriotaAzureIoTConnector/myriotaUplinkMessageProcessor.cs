@@ -135,7 +135,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 telemetryEvent.TryAdd("TerminalId", packet.TerminalId);
                 telemetryEvent.TryAdd("PacketArrivedAtUtc", packet.Timestamp.ToString("s", CultureInfo.InvariantCulture));
-                telemetryEvent.TryAdd("Value", packet.Value);
+
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    telemetryEvent.TryAdd("Value", packet.Value);
+                }
 
                 _logger.LogDebug("Uplink-PayloadId:{0} TerminalId:{1} TelemetryEvent:{0}", payload.Id, packet.TerminalId, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
 
