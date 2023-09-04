@@ -12,6 +12,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PayloadFormatters", "PayloadFormatters", "{A7A6DFFF-FDF9-4405-BB36-6846BA48C193}"
 	ProjectSection(SolutionItems) = preProject
 		PayloadFormatters\default.cs = PayloadFormatters\default.cs
+		PayloadFormatters\tracker.cs = PayloadFormatters\tracker.cs
 	EndProjectSection
 EndProject
 Global
