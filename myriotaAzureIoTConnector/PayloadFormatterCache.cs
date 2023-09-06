@@ -24,10 +24,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
     
+    using CSScriptLib;
     using LazyCache;
 
     using PayloadFormatter;
-    using CSScriptLib;
+
 
     public interface IPayloadFormatterCache
     {
