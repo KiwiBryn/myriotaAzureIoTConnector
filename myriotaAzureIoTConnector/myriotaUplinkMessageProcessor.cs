@@ -193,7 +193,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
         private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, object context)
         {
-
             DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
 
             await deviceClient.OpenAsync();
