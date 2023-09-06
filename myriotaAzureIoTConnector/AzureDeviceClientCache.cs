@@ -40,11 +40,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             return await _azuredeviceClients.GetOrAddAsync(terminalId, addItemFactory, memoryCacheEntryOptions );
         }
 
-        private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
-        {
-            Priority = CacheItemPriority.NeverRemove
-        };
-
         public async Task Remove(string terminalId)
         {
             if (_azuredeviceClients.TryGetValue<DeviceClient>(terminalId.ToString(), out DeviceClient deviceClient))
@@ -52,5 +47,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 await deviceClient.DisposeAsync();
             }
         }
+
+        private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
+        {
+            Priority = CacheItemPriority.NeverRemove
+        };
     }
 }
