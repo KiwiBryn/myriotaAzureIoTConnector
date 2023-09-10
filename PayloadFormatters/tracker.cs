@@ -11,6 +11,7 @@ typedef struct {
 */ 
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,6 +35,8 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
         DateTime lastFix = DateTime.UnixEpoch.AddSeconds(packetimestamp);
 
         telemetryEvent.Add("LastFix", lastFix);
+
+        properties.Add("iothub-creation-time-utc", lastFix.ToString("s", CultureInfo.InvariantCulture));
 
         return telemetryEvent;
     }
