@@ -25,11 +25,17 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
 
         telemetryEvent.Add("SequenceNumber", BitConverter.ToUInt16(payloadBytes));
 
+        JObject location = new JObject();
+
         double latitude = BitConverter.ToInt32(payloadBytes, 2) / 10000000.0;
-        telemetryEvent.Add("Latitude", latitude);
+        location.Add("lat", latitude);
 
         double longitude = BitConverter.ToInt32(payloadBytes, 6) / 10000000.0;
-        telemetryEvent.Add("Longitude", longitude);
+        location.Add("lon", longitude);
+
+        location.Add("alt", 0);
+
+        telemetryEvent.Add("DeviceLocation", location);
 
         UInt32 packetimestamp = BitConverter.ToUInt32(payloadBytes, 10);
         DateTime lastFix = DateTime.UnixEpoch.AddSeconds(packetimestamp);
