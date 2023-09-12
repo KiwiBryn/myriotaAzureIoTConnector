@@ -59,16 +59,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         {
             DeviceClient deviceClient;
 
-            using (_logger.BeginScope("MyriotaUplinkMessageProcessor"))
-            {
-                _logger.LogInformation("Application:{Application} PayloadId:{Id} ReceivedAtUTC:{PayloadReceivedAtUtc:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{PayloadArrivedAtUtc:yyyy:MM:dd HH:mm:ss} Endpoint:{EndpointRef} Packets:{Count}", payload.Application, payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
+            _logger.LogInformation("Application:{0} PayloadId:{1} ReceivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{3:yyyy:MM:dd HH:mm:ss} Endpoint:{4} Packets:{5}", payload.Application, payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
-                if (_logger.IsEnabled(LogLevel.Debug))
+            if (_logger.IsEnabled(LogLevel.Debug))
+            {
+                foreach (Models.QueuePacket packet in payload.Data.Packets)
                 {
-                    foreach (Models.QueuePacket packet in payload.Data.Packets)
-                    {
-                        _logger.LogDebug("TerminalId:{TerminalId} Timestamp:{Timestamp:yyyy:MM:dd HH:mm:ss}  Value:{Value}", packet.TerminalId, packet.Timestamp, packet.Value);
-                    }
+                    _logger.LogDebug("TerminalId:{0} Timestamp:{1:yyyy:MM:dd HH:mm:ss}  Value:{2}", packet.TerminalId, packet.Timestamp, packet.Value);
                 }
             }
 
@@ -80,9 +77,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
             catch (CSScriptLib.CompilerException cex)
             {
-                _logger.LogInformation(cex, "Uplink-PayloadID:{Id} Application:{Application} payload formatter compilation failed", payload.Id, payload.Application);
+                _logger.LogInformation(cex, "Uplink-PayloadID:{0} Application:{1} payload formatter compilation failed", payload.Id, payload.Application);
 
-                throw new InvalidProgramException("Uplink payload formatter invalid or not found");
+                throw new InvalidProgramException("Uplink payload formatter invalid");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation(ex, "Uplink-PayloadID:{0} Application:{1} payload formatter load failed", payload.Id, payload.Application);
+
+                throw;
             }
 
             foreach (Models.QueuePacket packet in payload.Data.Packets)
@@ -99,7 +102,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
                 catch (FormatException fex)
                 {
-                    _logger.LogWarning(fex, "Uplink- TerminalId:{0} Payload:{1} Convert.FromBase64String(payload.Data) failed", packet.TerminalId, payload.Id );
+                    _logger.LogWarning(fex, "Uplink- TerminalId:{0} Payload:{1} Convert.FromBase64String(2) failed", packet.TerminalId, payload.Id );
 
                     throw new ArgumentException("Convert.FromBase64String(payload.Data) failed");
                 }
@@ -119,13 +122,31 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     {
                         _logger.LogInformation(fex, "Uplink- TerminalId:{0} PayloadId:{1} Encoding.UTF8.GetString(payloadBytes) failed", packet.TerminalId, payload.Id);
                     }
-                    catch (JsonReaderException jrex)
+                    catch (JsonReaderException)
                     {
-                        _logger.LogInformation(jrex, "Uplink- TerminalId:{0} PayloadId:{1} JObject.Parse(payloadText) failed", packet.TerminalId, payload.Id);
+                        _logger.LogInformation("Uplink- TerminalId:{0} PayloadId:{1} JObject.Parse(payloadText) failed", packet.TerminalId, payload.Id);
                     }
                 }
 
-                JObject telemetryEvent = payloadFormatterUplink.Evaluate(properties, payload.Application, packet.TerminalId, packet.Timestamp, payloadJson, payloadText, payloadBytes);
+                JObject telemetryEvent;
+
+                try
+                {
+                    telemetryEvent = payloadFormatterUplink.Evaluate(properties, payload.Application, packet.TerminalId, packet.Timestamp, payloadJson, payloadText, payloadBytes);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Uplink- TerminalId:{0} PayloadId:{1} Evaluate failed Packet:{2}", packet.TerminalId, payload.Id, packet.Value);
+
+                    throw new InvalidProgramException();
+                }
+
+                if (telemetryEvent is null)
+                {
+                    _logger.LogWarning("Uplink- TerminalId:{0} PayloadId:{1} Evaluate returned null Payload:{2}", packet.TerminalId, payload.Id, packet.Value);
+
+                    throw new InvalidProgramException();
+                }
 
                 telemetryEvent.TryAdd("PayloadReceivedAtUtc", payload.PayloadReceivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
                 telemetryEvent.TryAdd("PayloadArrivedAtUtc", payload.PayloadArrivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
@@ -141,7 +162,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     telemetryEvent.TryAdd("Value", packet.Value);
                 }
 
-                _logger.LogDebug("Uplink-PayloadId:{0} TerminalId:{1} TelemetryEvent:{0}", payload.Id, packet.TerminalId, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
+                if (_logger.IsEnabled(LogLevel.Debug))
+                {
+                    _logger.LogDebug("Uplink-PayloadId:{0} TerminalId:{1} TelemetryEvent:{2}", payload.Id, packet.TerminalId, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
+                }
 
                 using (Message ioTHubmessage = new Message(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
                 {
@@ -226,9 +250,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
   
                     if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                     {
-                        _logger.LogWarning("Uplink-DeviceID:{deviceId} RegisterAsync status:{result.Status} failed ", terminalId, result.Status);
+                        _logger.LogWarning("Uplink-DeviceID:{0} RegisterAsync status:{1} failed ", terminalId, result.Status);
 
-                        throw new ApplicationException($"Uplink-DeviceID:{terminalId} RegisterAsync status:{result.Status} failed");
+                        throw new ApplicationException($"Uplink-DeviceID:{0} RegisterAsync status:{1} failed");
                     }
 
                     IAuthenticationMethod authentication = new DeviceAuthenticationWithRegistrySymmetricKey(result.DeviceId, (securityProvider as SecurityProviderSymmetricKey).GetPrimaryKey());
