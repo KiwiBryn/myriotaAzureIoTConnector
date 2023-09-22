@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PayloadFormatterMaintenanceApplication": {
+      "commandName": "Project",
+      "commandLineArgs": "-d uplink -u 65002 -i 31955 -t 1 -p AssetTrackerRunning.txt -o 65760"
+    }
+  }
+}
