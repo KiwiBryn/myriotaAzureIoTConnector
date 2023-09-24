@@ -108,7 +108,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
 
                 string payloadText = string.Empty;
-                JObject payloadJson = null;
+                JObject? payloadJson = null;
 
                 if (payloadBytes.Length > 1)
                 {
@@ -200,7 +200,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
         public async Task<DeviceClient> GetOrAddAsync(string terminalId, object context)
         {
-            DeviceClient deviceClient = null;
+            DeviceClient deviceClient;
 
             switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
             {
