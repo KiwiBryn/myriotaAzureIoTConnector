@@ -40,9 +40,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public class MyriotaUplinkMessageProcessor
     {
-        private static ILogger _logger;
-        private static Models.AzureIoT _azureIoTSettings;
-        private static IAzureDeviceClientCache _azuredeviceClientCache;
+        private readonly ILogger _logger;
+        private readonly Models.AzureIoT _azureIoTSettings;
+        private readonly IAzureDeviceClientCache _azuredeviceClientCache;
         private readonly IPayloadFormatterCache _payloadFormatterCache;
 
 
@@ -59,7 +59,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         {
             DeviceClient deviceClient;
 
-            _logger.LogInformation("Application:{0} PayloadId:{1} ReceivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{3:yyyy:MM:dd HH:mm:ss} Endpoint:{4} Packets:{5}", payload.Application, payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
+            _logger.LogInformation("Application start:{0} PayloadId:{1} ReceivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{3:yyyy:MM:dd HH:mm:ss} Endpoint:{4} Packets:{5}", payload.Application, payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
             if (_logger.IsEnabled(LogLevel.Debug))
             {
@@ -124,7 +124,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     }
                     catch (JsonReaderException)
                     {
-                        _logger.LogInformation("Uplink- TerminalId:{0} PayloadId:{1} JObject.Parse(payloadText) failed", packet.TerminalId, payload.Id);
+                        _logger.LogDebug("Uplink- TerminalId:{0} PayloadId:{1} JObject.Parse(payloadText) failed", packet.TerminalId, payload.Id);
                     }
                 }
 
@@ -190,8 +190,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                         throw;
                     }
+
+                    _logger.LogInformation("Uplink- TerminalId:{0} PayloadId:{1} SendEventAsync success", packet.TerminalId, payload.Id);
                 }
             }
+
+            _logger.LogInformation("Application Finish:{0} PayloadId:{1}", payload.Application, payload.Id);
         }
 
         public async Task<DeviceClient> GetOrAddAsync(string terminalId, object context)
