@@ -148,7 +148,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} Text:{4} JSON:{5} payload formatter evaluate failed returned null", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes), payloadText, payloadJson);
 
-                    throw new ArgumentNullException(nameof(telemetryEvent));
+                    throw new ArgumentNullException();
                 }
 
                 // Enrich the telemetry event with metadata, using TryAdd as some of the values may have been added by the formatter
@@ -180,7 +180,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} ", payload.Id, packet.TerminalId);
+                    _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} ", payload.Id, packet.TerminalId);
 
                     throw;
                 }
