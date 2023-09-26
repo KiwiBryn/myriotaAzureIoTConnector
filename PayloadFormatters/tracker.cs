@@ -23,6 +23,11 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
     {
         JObject telemetryEvent = new JObject();
 
+        if (payloadBytes is null)
+        {
+            return telemetryEvent;
+        }
+
         telemetryEvent.Add("SequenceNumber", BitConverter.ToUInt16(payloadBytes));
 
         JObject location = new JObject();
@@ -38,11 +43,12 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
         telemetryEvent.Add("DeviceLocation", location);
 
         UInt32 packetimestamp = BitConverter.ToUInt32(payloadBytes, 10);
-        DateTime lastFix = DateTime.UnixEpoch.AddSeconds(packetimestamp);
 
-        telemetryEvent.Add("LastFix", lastFix);
+        DateTime fixAtUtc = DateTime.UnixEpoch.AddSeconds(packetimestamp);
 
-        properties.Add("iothub-creation-time-utc", lastFix.ToString("s", CultureInfo.InvariantCulture));
+        telemetryEvent.Add("FixAtUtc", fixAtUtc);
+
+        properties.Add("iothub-creation-time-utc", fixAtUtc.ToString("s", CultureInfo.InvariantCulture));
 
         return telemetryEvent;
     }
