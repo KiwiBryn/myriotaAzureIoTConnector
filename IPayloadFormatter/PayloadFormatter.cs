@@ -1,4 +1,4 @@
-﻿// Copyright (c) August 2023, devMobile Software
+﻿// Copyright (c) September 2023, devMobile Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,10 +24,8 @@ namespace PayloadFormatter // Additional namespace for shortening interface when
         public JObject Evaluate(IDictionary<string, string> properties, string application, string terminalId, DateTime timestamp, JObject? payloadJson, string payloadText, byte[] payloadBytes);
     }
 
-    /*
     public interface IFormatterDownlink
     {
-        public byte[] Evaluate(IDictionary<string, string> properties, uint organisationId, uint deviceId, byte deviceType, ushort userApplicationId, JObject payloadJson, string payloadText, byte[] payloadBytes);
+        public byte[] Evaluate(IDictionary<string, string> properties, string application, uint terminalId, JObject payloadJson, string payloadText, byte[] payloadBytes);
     }
-    */
 }

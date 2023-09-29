@@ -34,9 +34,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     {
         public Task<IFormatterUplink> UplinkGetAsync(string userApplicationId);
 
-        /*
         public Task<IFormatterDownlink> DownlinkGetAsync(string userApplicationId);
-        */
     }
 
     public class PayloadFormatterCache : IPayloadFormatterCache
@@ -76,7 +74,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterUplink>(downloadResult.Content.ToString());
         }
 
-        /*
         public async Task<IFormatterDownlink> DownlinkGetAsync(string application)
         {
             IFormatterDownlink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync<PayloadFormatter.IFormatterDownlink>($"D{application}", (ICacheEntry x) => DownlinkLoadAsync(application), memoryCacheEntryOptions);
@@ -90,16 +87,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if (!await blobClient.ExistsAsync())
             {
-                _logger.LogInformation("PayloadFormatterDownlink- ApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkBlobDefault);
+                _logger.LogInformation("PayloadFormatterDownlink- ApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterDownlinkdefault);
 
-                blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersDownlinkContainer, _applicationSettings.PayloadFormatterDownlinkBlobDefault);
+                blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersDownlinkContainer, _applicationSettings.PayloadFormatterDownlinkdefault);
             }
 
             BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync();
 
             return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterDownlink>(downloadResult.Content.ToString());
         }
-        */
 
         private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
         {
