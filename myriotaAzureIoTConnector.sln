@@ -10,10 +10,14 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IPayloadFormatter", "IPayloadFormatter\IPayloadFormatter.csproj", "{8979E18F-4689-4EDA-9167-E98FE0F1AED5}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PayloadFormatters", "PayloadFormatters", "{A7A6DFFF-FDF9-4405-BB36-6846BA48C193}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Uplink", "Uplink", "{13AC98F2-3FE2-47A4-99C4-DD74D03CF71D}"
 	ProjectSection(SolutionItems) = preProject
 		PayloadFormatters\default.cs = PayloadFormatters\default.cs
 		PayloadFormatters\tracker.cs = PayloadFormatters\tracker.cs
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Downlink", "Downlink", "{E7567147-28F2-4F60-B71F-AE127BFB246A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -36,6 +40,10 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{13AC98F2-3FE2-47A4-99C4-DD74D03CF71D} = {A7A6DFFF-FDF9-4405-BB36-6846BA48C193}
+		{E7567147-28F2-4F60-B71F-AE127BFB246A} = {A7A6DFFF-FDF9-4405-BB36-6846BA48C193}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B094F977-4714-438F-9063-12311B59E598}
