@@ -14,6 +14,8 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
+using System.Collections.Generic;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 
@@ -23,6 +25,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
     public class AzureIoT
     {
         public AzureIotHub AzureIoTHub { get; set; }
+
+        public Dictionary<string,string> ApplicationToDtdlModelIdMapping { get; set; }
     }
 
     public class AzureIotHub

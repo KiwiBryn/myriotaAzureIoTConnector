@@ -23,6 +23,7 @@ using System.Threading.Tasks;
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Devices.Provisioning.Client;
+using Microsoft.Azure.Devices.Provisioning.Client.PlugAndPlay;
 using Microsoft.Azure.Devices.Provisioning.Client.Transport;
 using Microsoft.Azure.Devices.Shared;
 using Microsoft.Azure.Functions.Worker;
@@ -170,7 +171,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    deviceClient = await GetOrAddAsync(packet.TerminalId, null);
+                    deviceClient = await GetOrAddAsync(packet.TerminalId, payload.Application, null);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -213,17 +214,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
         }
 
-        public async Task<DeviceClient> GetOrAddAsync(string terminalId, object context)
+        public async Task<DeviceClient> GetOrAddAsync(string terminalId, string application, object context)
         {
             DeviceClient deviceClient;
 
             switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
             {
                 case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId, context));
+                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId, application, context));
                     break;
                 case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceProvisioningServiceConnectAsync(terminalId, context));
+                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceProvisioningServiceConnectAsync(terminalId, application, context));
                     break;
                 default:
                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
@@ -234,16 +235,30 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             return deviceClient;
         }
 
-        private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, object context)
+        private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, string application, object context)
         {
-            DeviceClient deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
+            DeviceClient deviceClient;
+
+            if (_azureIoTSettings.ApplicationToDtdlModelIdMapping.TryGetValue(application, out string? modelId))
+            {
+                ClientOptions clientOptions = new ClientOptions()
+                {
+                    ModelId = modelId
+                };
+
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings, clientOptions);
+            }
+            else
+            { 
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
+            }
 
             await deviceClient.OpenAsync();
 
             return deviceClient;
         }
 
-        private async Task<DeviceClient> AzureIoTHubDeviceProvisioningServiceConnectAsync(string terminalId, object context)
+        private async Task<DeviceClient> AzureIoTHubDeviceProvisioningServiceConnectAsync(string terminalId, string application, object context)
         {
             DeviceClient deviceClient;
 
@@ -263,9 +278,25 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                         _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.GlobalDeviceEndpoint,
                         _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.IdScope,
                         securityProvider,
-                        transport);
+                    transport);
 
-                    result = await provClient.RegisterAsync();
+                    if (_azureIoTSettings.ApplicationToDtdlModelIdMapping.TryGetValue(application, out string? modelId))
+                    {
+                        ClientOptions clientOptions = new ClientOptions()
+                        {
+                            ModelId = modelId
+                        };
+
+                        ProvisioningRegistrationAdditionalData provisioningRegistrationAdditionalData = new ProvisioningRegistrationAdditionalData()
+                        {
+                            JsonData = PnpConvention.CreateDpsPayload(modelId)
+                        };
+                        result = await provClient.RegisterAsync(provisioningRegistrationAdditionalData);
+                    }
+                    else
+                    {
+                        result = await provClient.RegisterAsync();
+                    }
   
                     if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                     {
