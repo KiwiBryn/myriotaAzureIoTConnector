@@ -24,25 +24,25 @@ using LazyCache;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    public interface IAzureDeviceClientCache
+    public interface IDeviceConnectionCache
     {
         public Task<DeviceClient> GetOrAddAsync(string terminalId, Func<ICacheEntry, Task<DeviceClient>> addItemFactory);
 
         public Task Remove(string terminalId);
     }
 
-    internal class AzureDeviceClientCache : IAzureDeviceClientCache
+    internal class DeviceConnectionCache : IDeviceConnectionCache
     {
-        private static readonly IAppCache _azuredeviceClients = new CachingService();
+        private static readonly IAppCache _deviceConnectionCache = new CachingService();
 
         public async Task<DeviceClient> GetOrAddAsync(string terminalId, Func<ICacheEntry, Task<DeviceClient>> addItemFactory)
         {
-            return await _azuredeviceClients.GetOrAddAsync(terminalId, addItemFactory, memoryCacheEntryOptions );
+            return await _deviceConnectionCache.GetOrAddAsync(terminalId, addItemFactory, memoryCacheEntryOptions );
         }
 
         public async Task Remove(string terminalId)
         {
-            if (_azuredeviceClients.TryGetValue<DeviceClient>(terminalId.ToString(), out DeviceClient deviceClient))
+            if (_deviceConnectionCache.TryGetValue<DeviceClient>(terminalId.ToString(), out DeviceClient deviceClient))
             {
                 await deviceClient.DisposeAsync();
             }

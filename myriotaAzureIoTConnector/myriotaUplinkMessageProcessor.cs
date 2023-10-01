@@ -44,11 +44,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     {
         private readonly ILogger _logger;
         private readonly Models.AzureIoT _azureIoTSettings;
-        private readonly IAzureDeviceClientCache _azuredeviceClientCache;
+        private readonly IDeviceConnectionCache _azuredeviceClientCache;
         private readonly IPayloadFormatterCache _payloadFormatterCache;
 
 
-        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IAzureDeviceClientCache azuredeviceClientCache, IPayloadFormatterCache payloadFormatterCache)
+        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IDeviceConnectionCache azuredeviceClientCache, IPayloadFormatterCache payloadFormatterCache)
         {
             _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
             _azureIoTSettings = azureIoTSettings.Value;
@@ -171,7 +171,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    deviceClient = await GetOrAddAsync(packet.TerminalId, payload.Application, null);
+                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application, null);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -214,7 +214,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
         }
 
-        public async Task<DeviceClient> GetOrAddAsync(string terminalId, string application, object context)
+        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, string application, object context)
         {
             DeviceClient deviceClient;
 
