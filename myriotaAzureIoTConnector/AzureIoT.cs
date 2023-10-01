@@ -43,5 +43,25 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public partial class MyriotaUplinkMessageProcessor
     {
+        private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, string application)
+        {
+            DeviceClient deviceClient;
+
+            if (_azureIoTSettings.ApplicationToDtdlModelIdMapping.TryGetValue(application, out string? modelId))
+            {
+                ClientOptions clientOptions = new ClientOptions()
+                {
+                    ModelId = modelId
+                };
+
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions);
+            }
+            else
+            {
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
+            }
+
+            return deviceClient;
+        }
     }
 }
