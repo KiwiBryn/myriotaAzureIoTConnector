@@ -246,11 +246,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     ModelId = modelId
                 };
 
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings, clientOptions);
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions);
             }
             else
             { 
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, TransportSettings);
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
             }
 
             await deviceClient.OpenAsync();
@@ -307,7 +307,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     IAuthenticationMethod authentication = new DeviceAuthenticationWithRegistrySymmetricKey(result.DeviceId, (securityProvider as SecurityProviderSymmetricKey).GetPrimaryKey());
 
-                    deviceClient = DeviceClient.Create(result.AssignedHub, authentication, TransportSettings);
+                    deviceClient = DeviceClient.Create(result.AssignedHub, authentication, Constants.TransportSettings);
                 }
             }
 
@@ -315,16 +315,5 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             return deviceClient;
         }
-
-        private static readonly ITransportSettings[] TransportSettings = new ITransportSettings[]
-        {
-            new AmqpTransportSettings(TransportType.Amqp_Tcp_Only)
-            {
-                AmqpConnectionPoolSettings = new AmqpConnectionPoolSettings()
-                {
-                    Pooling = true,
-                }
-             }
-        };
     }
 }
