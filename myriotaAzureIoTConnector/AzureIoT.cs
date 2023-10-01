@@ -63,5 +63,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             return deviceClient;
         }
+
+        private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
+        {
+            _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", (string)userContext, methodRequest.Name, methodRequest.DataAsJson);
+
+            return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
+        }
     }
 }
