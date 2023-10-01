@@ -16,17 +16,11 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Net;
-using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Exceptions;
-using Microsoft.Azure.Devices.Provisioning.Client;
-using Microsoft.Azure.Devices.Provisioning.Client.PlugAndPlay;
-using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Shared;
 using Microsoft.Azure.Functions.Worker;
 
 using Microsoft.Extensions.Caching.Memory;
