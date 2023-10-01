@@ -16,6 +16,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
@@ -171,7 +172,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application, null);
+                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -214,17 +215,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
         }
 
-        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, string application, object context)
+        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, string application)
         {
             DeviceClient deviceClient;
 
             switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
             {
                 case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId, application, context));
+                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceConnectionStringConnectAsync(terminalId, application));
                     break;
                 case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceProvisioningServiceConnectAsync(terminalId, application, context));
+                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => AzureIoTHubDeviceProvisioningServiceConnectAsync(terminalId, application));
                     break;
                 default:
                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
@@ -235,7 +236,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             return deviceClient;
         }
 
-        private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, string application, object context)
+        private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, string application)
         {
             DeviceClient deviceClient;
 
@@ -253,12 +254,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
             }
 
+            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId);
+
             await deviceClient.OpenAsync();
 
             return deviceClient;
         }
 
-        private async Task<DeviceClient> AzureIoTHubDeviceProvisioningServiceConnectAsync(string terminalId, string application, object context)
+        private async Task<DeviceClient> AzureIoTHubDeviceProvisioningServiceConnectAsync(string terminalId, string application)
         {
             DeviceClient deviceClient;
 
@@ -311,9 +314,18 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
             }
 
+            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId );
+
             await deviceClient.OpenAsync();
 
             return deviceClient;
+        }
+
+        private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
+        {
+              _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", (string)userContext, methodRequest.Name, methodRequest.DataAsJson);
+
+            return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
         }
     }
 }
