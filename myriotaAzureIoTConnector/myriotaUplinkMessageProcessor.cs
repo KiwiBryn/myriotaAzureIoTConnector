@@ -233,6 +233,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
             }
 
+            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId);
+
+            await deviceClient.OpenAsync();
+
             return deviceClient;
         }
 
@@ -253,10 +257,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             { 
                 deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
             }
-
-            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId);
-
-            await deviceClient.OpenAsync();
 
             return deviceClient;
         }
@@ -313,10 +313,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     deviceClient = DeviceClient.Create(result.AssignedHub, authentication, Constants.TransportSettings);
                 }
             }
-
-            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId );
-
-            await deviceClient.OpenAsync();
 
             return deviceClient;
         }
