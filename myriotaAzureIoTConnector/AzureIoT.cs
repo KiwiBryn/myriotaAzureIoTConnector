@@ -43,7 +43,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public partial class MyriotaUplinkMessageProcessor
     {
-        private async Task<DeviceClient> AzureIoTHubDeviceConnectionStringConnectAsync(string terminalId, string application)
+        private async Task<DeviceClient> DeviceConnectionStringConnectAsync(string terminalId, string application)
         {
             DeviceClient deviceClient;
 
@@ -64,7 +64,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             return deviceClient;
         }
 
-        private async Task<DeviceClient> AzureIoTHubDeviceProvisioningServiceConnectAsync(string terminalId, string application)
+        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, string application)
         {
             DeviceClient deviceClient;
 
