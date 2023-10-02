@@ -17,6 +17,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.Devices.Client;
@@ -52,7 +53,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         }
 
         [Function("UplinkMessageProcessor")]
-        public async Task UplinkMessageProcessor([QueueTrigger("uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload)
+        public async Task UplinkMessageProcessor([QueueTrigger("uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Uplink- PayloadId:{0} Application:{1} ReceivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{3:yyyy:MM:dd HH:mm:ss} Endpoint:{4} Packets:{5}", payload.Id, payload.Application, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
@@ -69,7 +70,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             try
             {
-                payloadFormatterUplink = await _payloadFormatterCache.UplinkGetAsync(payload.Application);
+                payloadFormatterUplink = await _payloadFormatterCache.UplinkGetAsync(payload.Application, cancellationToken);
             }
             catch (CSScriptLib.CompilerException cex)
             {
@@ -166,7 +167,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application);
+                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application,cancellationToken);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -209,7 +210,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
         }
 
-        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, string application)
+        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, string application, CancellationToken cancellationToken)
         {
             DeviceClient deviceClient;
 
@@ -219,7 +220,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, application));
                     break;
                 case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, application));
+                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, application, cancellationToken));
                     break;
                 default:
                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
@@ -227,9 +228,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
             }
 
-            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId);
+            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
 
-            await deviceClient.OpenAsync();
+            await deviceClient.OpenAsync(cancellationToken);
 
             return deviceClient;
         }

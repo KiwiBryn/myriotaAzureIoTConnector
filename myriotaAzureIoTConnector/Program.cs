@@ -46,13 +46,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     configuration.GetSection("AzureIoT").Bind(settings);
                 });
-                services.AddSingleton<IPayloadFormatterCache, PayloadFormatterCache>();
                 services.AddSingleton<IDeviceConnectionCache, DeviceConnectionCache>();
+                services.AddSingleton<IPayloadFormatterCache, PayloadFormatterCache>();
                 services.AddOptions<Models.PayloadformatterSettings>().Configure<IConfiguration>((settings, configuration) =>
                 {
                     configuration.GetSection("PayloadFormatters").Bind(settings);
                 });
-                services.AddSingleton<IPayloadFormatterCache, PayloadFormatterCache>();
             })
             .UseConsoleLifetime();
 

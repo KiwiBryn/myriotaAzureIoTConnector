@@ -17,6 +17,7 @@ using System;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.Devices.Client;
@@ -53,7 +54,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             return deviceClient;
         }
 
-        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, string application)
+        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, string application, CancellationToken cancellationToken)
         {
             DeviceClient deviceClient;
 
@@ -86,11 +87,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                         {
                             JsonData = PnpConvention.CreateDpsPayload(modelId)
                         };
-                        result = await provClient.RegisterAsync(provisioningRegistrationAdditionalData);
+                        result = await provClient.RegisterAsync(provisioningRegistrationAdditionalData, cancellationToken);
                     }
                     else
                     {
-                        result = await provClient.RegisterAsync();
+                        result = await provClient.RegisterAsync(cancellationToken);
                     }
 
                     if (result.Status != ProvisioningRegistrationStatusType.Assigned)

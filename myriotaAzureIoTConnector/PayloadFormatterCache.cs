@@ -15,6 +15,7 @@
 //---------------------------------------------------------------------------------
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Azure.Storage.Blobs;
@@ -32,9 +33,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
     public interface IPayloadFormatterCache
     {
-        public Task<IFormatterUplink> UplinkGetAsync(string userApplicationId);
+        public Task<IFormatterUplink> UplinkGetAsync(string userApplicationId, CancellationToken cancellationToken);
 
-        public Task<IFormatterDownlink> DownlinkGetAsync(string userApplicationId);
+        public Task<IFormatterDownlink> DownlinkGetAsync(string userApplicationId, CancellationToken cancellationToken);
     }
 
     public class PayloadFormatterCache : IPayloadFormatterCache
@@ -51,48 +52,48 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             _applicationSettings = applicationSettings.Value;
         }
 
-        public async Task<IFormatterUplink> UplinkGetAsync(string application)
+        public async Task<IFormatterUplink> UplinkGetAsync(string application,CancellationToken cancellationToken)
         {
-            IFormatterUplink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync<PayloadFormatter.IFormatterUplink>($"U{application}", (ICacheEntry x) => UplinkLoadAsync(application), memoryCacheEntryOptions);
+            IFormatterUplink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync<PayloadFormatter.IFormatterUplink>($"U{application}", (ICacheEntry x) => UplinkLoadAsync(application, cancellationToken), memoryCacheEntryOptions);
 
             return payloadFormatterUplink;
         }
 
-        private async Task<IFormatterUplink> UplinkLoadAsync(string application)
+        private async Task<IFormatterUplink> UplinkLoadAsync(string application, CancellationToken cancellationToken)
         {
             BlobClient blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersUplinkContainer, $"{application}.cs");
 
-            if (!await blobClient.ExistsAsync())
+            if (!await blobClient.ExistsAsync(cancellationToken))
             { 
                 _logger.LogInformation("PayloadFormatterUplink- UserApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkDefault);
 
                 blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkDefault);
             }
 
-            BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync();
+            BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
 
             return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterUplink>(downloadResult.Content.ToString());
         }
 
-        public async Task<IFormatterDownlink> DownlinkGetAsync(string application)
+        public async Task<IFormatterDownlink> DownlinkGetAsync(string application, CancellationToken cancellationToken)
         {
-            IFormatterDownlink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync<PayloadFormatter.IFormatterDownlink>($"D{application}", (ICacheEntry x) => DownlinkLoadAsync(application), memoryCacheEntryOptions);
+            IFormatterDownlink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync<PayloadFormatter.IFormatterDownlink>($"D{application}", (ICacheEntry x) => DownlinkLoadAsync(application, cancellationToken), memoryCacheEntryOptions);
 
             return payloadFormatterUplink;
         }
 
-        private async Task<IFormatterDownlink> DownlinkLoadAsync(string application)
+        private async Task<IFormatterDownlink> DownlinkLoadAsync(string application, CancellationToken cancellationToken)
         {
             BlobClient blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersDownlinkContainer, $"{application}.cs");
 
-            if (!await blobClient.ExistsAsync())
+            if (!await blobClient.ExistsAsync(cancellationToken))
             {
                 _logger.LogInformation("PayloadFormatterDownlink- ApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterDownlinkdefault);
 
                 blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersDownlinkContainer, _applicationSettings.PayloadFormatterDownlinkdefault);
             }
 
-            BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync();
+            BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
 
             return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterDownlink>(downloadResult.Content.ToString());
         }
