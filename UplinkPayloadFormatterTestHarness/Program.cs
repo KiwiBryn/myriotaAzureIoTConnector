@@ -94,7 +94,7 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.UplinkPayloadFormatterTestHarne
 
             try
             {
-                telemetryEvent = evalulatorUplink.Evaluate(properties, options.Application, options.TerminalId, timeStamp, null, null, payloadBytes);
+                telemetryEvent = evalulatorUplink.Evaluate(properties, options.Application, options.TerminalId, timeStamp, payloadBytes);
             }
             catch (Exception ex)
             {
