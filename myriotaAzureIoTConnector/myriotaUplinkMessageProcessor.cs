@@ -198,7 +198,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     try
                     {
-                        await deviceClient.SendEventAsync(ioTHubmessage);
+                        await deviceClient.SendEventAsync(ioTHubmessage, cancellationToken);
                     }
                     catch (Exception sex)
                     {
