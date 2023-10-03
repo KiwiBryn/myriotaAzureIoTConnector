@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "UplinkPayloadFormatterTestHarness": {
+      "commandName": "Project",
+      "commandLineArgs": "-a Tracker"
+    }
+  }
+}
