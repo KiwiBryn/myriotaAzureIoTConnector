@@ -13,13 +13,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PayloadFormatters", "Payloa
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Uplink", "Uplink", "{13AC98F2-3FE2-47A4-99C4-DD74D03CF71D}"
 	ProjectSection(SolutionItems) = preProject
-		PayloadFormatters\default.cs = PayloadFormatters\default.cs
-		PayloadFormatters\tracker.cs = PayloadFormatters\tracker.cs
+		PayloadFormatters\Uplink\default.cs = PayloadFormatters\Uplink\default.cs
+		PayloadFormatters\Uplink\tracker.cs = PayloadFormatters\Uplink\tracker.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Downlink", "Downlink", "{E7567147-28F2-4F60-B71F-AE127BFB246A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UplinkPayloadFormatterTestHarness", "UplinkPayloadFormatterTestHarness\UplinkPayloadFormatterTestHarness.csproj", "{2E5CCA3E-FF39-4D38-B72D-E7D69ADB7F70}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UplinkPayloadFormatterTestHarness", "UplinkPayloadFormatterTestHarness\UplinkPayloadFormatterTestHarness.csproj", "{2E5CCA3E-FF39-4D38-B72D-E7D69ADB7F70}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PayloadFormatterTestHarnesses", "PayloadFormatterTestHarnesses", "{BC070055-C878-4E47-B220-757630C623BA}"
 EndProject
