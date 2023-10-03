@@ -111,13 +111,14 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.UplinkPayloadFormatterTestHarne
             telemetryEvent.TryAdd("DataLength", payloadBytes.Length);
             telemetryEvent.TryAdd("Data", Convert.ToHexString( payloadBytes));
 
-            Console.WriteLine("Properties");
+            Console.WriteLine("Properties:");
             foreach (var property in properties)
             {
                 Console.WriteLine($"{property.Key}:{property.Value}");
             }
+            Console.WriteLine("");
 
-            Console.WriteLine("Payload");
+            Console.WriteLine("JSON Telemetry event payload");
             Console.WriteLine(telemetryEvent.ToString(Formatting.Indented));
         }
     }
