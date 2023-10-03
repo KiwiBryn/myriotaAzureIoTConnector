@@ -102,48 +102,24 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw;
                 }
 
-                string payloadText = string.Empty;
-
-                // Convert bytes to text, if this fails then not a text payload
-                try
-                {
-                    payloadText = Encoding.UTF8.GetString(payloadBytes);
-                }
-                catch (ArgumentException aex)
-                {
-                    _logger.LogDebug(aex, "Uplink- PayloadId:{0} TerminalId:{1} Encoding.UTF8.GetString({2}) failed", payload.Id, packet.TerminalId, Convert.ToHexString(payloadBytes));
-                }
-
-                JObject? payloadJson = null;
-
-                // Convert text to JSON, if this fails then not a JSON payload
-                try
-                {
-                    payloadJson = JObject.Parse(payloadText);
-                }
-                catch (JsonReaderException jex)
-                {
-                    _logger.LogDebug(jex, "Uplink- PayloadId:{0} TerminalId:{1} JObject.Parse({2}) failed", payload.Id, packet.TerminalId, payloadText);
-                }
-
                 // Process the payload with application specific formatter
                 Dictionary<string, string> properties = new Dictionary<string, string>();
                 JObject telemetryEvent;
 
                 try
                 {
-                    telemetryEvent = payloadFormatterUplink.Evaluate(properties, payload.Application, packet.TerminalId, packet.Timestamp, payloadJson, payloadText, payloadBytes);
+                    telemetryEvent = payloadFormatterUplink.Evaluate(properties, payload.Application, packet.TerminalId, packet.Timestamp, payloadBytes);
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} Text:{4} JSON:{5} payload formatter evaluate failed", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes), payloadText, payloadJson);
+                    _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
 
                     throw ;
                 }
 
                 if (telemetryEvent is null)
                 {
-                    _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} Text:{4} JSON:{5} payload formatter evaluate failed returned null", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes), payloadText, payloadJson);
+                    _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed returned null", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
 
                     throw new ArgumentNullException();
                 }
