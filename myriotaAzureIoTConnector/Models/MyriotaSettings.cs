@@ -16,7 +16,7 @@
 //---------------------------------------------------------------------------------
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
-    internal class MyriotaSettings
+    public class MyriotaSettings
     {
         public string BaseUrl { get; set; } = string.Empty;
 
