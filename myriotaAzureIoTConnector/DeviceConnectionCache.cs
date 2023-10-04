@@ -28,7 +28,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     {
         public Task<DeviceClient> GetOrAddAsync(string terminalId, Func<ICacheEntry, Task<DeviceClient>> addItemFactory);
 
-        public Task Remove(string terminalId);
+        public Task<DeviceClient> GetAsync(string terminalId);
     }
 
     internal class DeviceConnectionCache : IDeviceConnectionCache
@@ -37,15 +37,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
         public async Task<DeviceClient> GetOrAddAsync(string terminalId, Func<ICacheEntry, Task<DeviceClient>> addItemFactory)
         {
-            return await _deviceConnectionCache.GetOrAddAsync(terminalId, addItemFactory, memoryCacheEntryOptions );
+            return await _deviceConnectionCache.GetOrAddAsync(terminalId, addItemFactory, memoryCacheEntryOptions);
         }
 
-        public async Task Remove(string terminalId)
+        public async Task<DeviceClient> GetAsync(string terminalId)
         {
-            if (_deviceConnectionCache.TryGetValue<DeviceClient>(terminalId.ToString(), out DeviceClient deviceClient))
-            {
-                await deviceClient.DisposeAsync();
-            }
+            return await _deviceConnectionCache.GetAsync<DeviceClient>(terminalId);
         }
 
         private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()

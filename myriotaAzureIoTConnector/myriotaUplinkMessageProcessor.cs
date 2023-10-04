@@ -114,7 +114,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
 
-                    throw ;
+                    throw;
                 }
 
                 if (telemetryEvent is null)
@@ -143,7 +143,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application,cancellationToken);
+                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application, cancellationToken);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -204,11 +204,27 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
             }
 
+            await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, terminalId, cancellationToken);
+
             await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
 
             await deviceClient.OpenAsync(cancellationToken);
 
             return deviceClient;
+        }
+
+        public async Task AzureIoTHubMessageHandler(Message message, object context)
+        {
+            string terminalId = (string)context;
+
+            _logger.LogInformation("Downlink-IoT Hub TerminalId:{termimalId} LockToken:{LockToken}", terminalId, message.LockToken);
+
+            DeviceClient deviceClient = await _azuredeviceClientCache.GetAsync(terminalId);
+
+            using (message)
+            {
+                await deviceClient.CompleteAsync(message);
+            }
         }
     }
 }
