@@ -30,5 +30,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
              }
         };
+
+        public const int DownlinkPayloadMinimumLength = 1;
+        public const int DownlinkPayloadMaximumLength = 20;
     }
 }
