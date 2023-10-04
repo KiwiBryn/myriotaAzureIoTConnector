@@ -35,7 +35,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     {
         public Task<IFormatterUplink> UplinkGetAsync(string userApplicationId, CancellationToken cancellationToken);
 
-        public Task<IFormatterDownlink> DownlinkGetAsync(string userApplicationId, CancellationToken cancellationToken);
+        public Task<IFormatterDownlink> DownlinkGetAsync(string userApplicationId, CancellationToken cancellationToken = default(CancellationToken));
     }
 
     public class PayloadFormatterCache : IPayloadFormatterCache
