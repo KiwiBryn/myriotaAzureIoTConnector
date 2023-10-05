@@ -190,7 +190,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 throw;
             }
         }
-
+        
         private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
         {
             _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", (string)userContext, methodRequest.Name, methodRequest.DataAsJson);
