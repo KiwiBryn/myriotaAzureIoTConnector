@@ -28,6 +28,7 @@ using Microsoft.Azure.Devices.Shared;
 
 using Microsoft.Extensions.Logging;
 
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using PayloadFormatter;
@@ -153,7 +154,20 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     byte[] payloadBytes = message.GetBytes();
 
-                    JObject payloadJson = JObject.Parse(Encoding.UTF8.GetString(payloadBytes));
+                    JObject? payloadJson = null;
+
+                    try
+                    {
+                        payloadJson = JObject.Parse(Encoding.UTF8.GetString(payloadBytes));
+                    }
+                    catch( ArgumentException aex)
+                    {
+                        _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} payload not valid Text", terminalId, message.LockToken);
+                    }
+                    catch ( JsonReaderException jex)
+                    {
+                        _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} payload not valid JSON", terminalId, message.LockToken);
+                    }
 
                     byte[] payloadData = payloadFormatterDownlink.Evaluate(message.Properties, application, terminalId, payloadJson, payloadBytes);
 
@@ -171,6 +185,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                         _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", terminalId, message.LockToken, application, payloadData.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
                         await deviceClient.RejectAsync(message);
+
+                        return;
                     }
 
                     if (_myriotaSettings.DownlinkEnabled)
