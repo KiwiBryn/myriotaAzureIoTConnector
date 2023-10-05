@@ -55,7 +55,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         }
 
         [Function("UplinkMessageProcessor")]
-        public async Task UplinkMessageProcessor([QueueTrigger("uplink-spare", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
+        public async Task UplinkMessageProcessor([QueueTrigger("uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Uplink- PayloadId:{0} Application:{1} ReceivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{3:yyyy:MM:dd HH:mm:ss} Endpoint:{4} Packets:{5}", payload.Id, payload.Application, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
@@ -213,83 +213,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             await deviceClient.OpenAsync(cancellationToken);
 
             return deviceClient;
-        }
-
-        public async Task AzureIoTHubMessageHandler(Message message, object context)
-        {
-            string terminalId = (string)context;
-
-            _logger.LogInformation("Downlink-IoT Hub TerminalId:{termimalId} LockToken:{LockToken}", terminalId, message.LockToken);
-
-            try
-            {
-                using (message)
-                {
-                    DeviceClient deviceClient = await _azuredeviceClientCache.GetAsync(terminalId);
-
-                    // Check that Message has property, UserApplicationId so it can be processed correctly
-                    if (!message.Properties.TryGetValue("Application", out string application))
-                    {
-                        _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} Application property missing", terminalId, message.LockToken);
-
-                        await deviceClient.RejectAsync(message);
-
-                        return;
-                    }
-
-                    IFormatterDownlink payloadFormatterDownlink;
-
-                    try
-                    {
-                        payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(application);
-                    }
-                    catch (CSScriptLib.CompilerException cex)
-                    {
-                        _logger.LogWarning(cex, "Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payload formatter compilation failed", terminalId, message.LockToken, application);
-
-                        await deviceClient.RejectAsync(message);
-
-                        return;
-                    }
-
-                    byte[] payloadBytes = message.GetBytes();
-
-                    JObject payloadJson = JObject.Parse(Encoding.UTF8.GetString(payloadBytes));
-
-                    byte[] payloadData = payloadFormatterDownlink.Evaluate(message.Properties,application, terminalId, payloadJson, payloadBytes);
-
-                    if ( payloadData is null)
-                    {
-                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payload formatter returned null", terminalId, message.LockToken, application);
-
-                        await deviceClient.RejectAsync(message);
-
-                        return;
-                    }
-
-                    if (( payloadData.Length < Constants.DownlinkPayloadMinimumLength) || (payloadData.Length > Constants.DownlinkPayloadMaximumLength))
-                    {
-                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", terminalId, message.LockToken, application, payloadData.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
-
-                        await deviceClient.RejectAsync(message);
-                    }
-
-                    if (_myriotaSettings.DownlinkEnabled)
-                    {
-                        // Send using Myriota API
-                    }
-
-                    _logger.LogInformation("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payloadData {payloadData} length:{Length} sent", terminalId, message.LockToken, application, Convert.ToHexString(payloadData), payloadData.Length);
-
-                    await deviceClient.CompleteAsync(message);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Downlink-MessageHandler processing failed");
-
-                throw;
-            }
         }
     }
 }
