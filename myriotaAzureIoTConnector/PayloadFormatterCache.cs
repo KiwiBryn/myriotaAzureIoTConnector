@@ -33,9 +33,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
     public interface IPayloadFormatterCache
     {
-        public Task<IFormatterUplink> UplinkGetAsync(string userApplicationId, CancellationToken cancellationToken);
+        public Task<IFormatterUplink> UplinkGetAsync(string application, CancellationToken cancellationToken);
 
-        public Task<IFormatterDownlink> DownlinkGetAsync(string userApplicationId, CancellationToken cancellationToken = default(CancellationToken));
+        public Task<IFormatterDownlink> DownlinkGetAsync(string application, CancellationToken cancellationToken = default(CancellationToken));
     }
 
     public class PayloadFormatterCache : IPayloadFormatterCache
@@ -61,13 +61,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
         private async Task<IFormatterUplink> UplinkLoadAsync(string application, CancellationToken cancellationToken)
         {
-            BlobClient blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersUplinkContainer, $"{application}.cs");
+            string containerName = _applicationSettings.PayloadFormattersUplinkContainer.ToLower();
+            string blobName = $"{application.ToLower()}.cs";
+            string blobNameDefault = _applicationSettings.PayloadFormatterUplinkDefault.ToLower();
+
+            BlobClient blobClient = new BlobClient(_payloadFormatterConnectionString, containerName, blobName);
 
             if (!await blobClient.ExistsAsync(cancellationToken))
             { 
-                _logger.LogInformation("PayloadFormatterUplink- UserApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkDefault);
+                _logger.LogInformation("PayloadFormatterUplink- Application formatter:{0} Container:{1} not found using default:{2}", blobName, containerName, blobNameDefault);
 
-                blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterUplinkDefault);
+                blobClient = new BlobClient(_payloadFormatterConnectionString, containerName, blobNameDefault);
             }
 
             BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
@@ -84,13 +88,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
         private async Task<IFormatterDownlink> DownlinkLoadAsync(string application, CancellationToken cancellationToken)
         {
-            BlobClient blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersDownlinkContainer, $"{application}.cs");
+            string containerName = _applicationSettings.PayloadFormattersDownlinkContainer.ToLower();
+            string blobName = $"{application.ToLower()}.cs";
+            string blobNameDefault = _applicationSettings.PayloadFormatterDownlinkdefault.ToLower();
+
+            BlobClient blobClient = new BlobClient(_payloadFormatterConnectionString, containerName, blobName);
 
             if (!await blobClient.ExistsAsync(cancellationToken))
             {
-                _logger.LogInformation("PayloadFormatterDownlink- ApplicationId:{0} Container:{1} not found using default:{2}", application, _applicationSettings.PayloadFormattersUplinkContainer, _applicationSettings.PayloadFormatterDownlinkdefault);
+                _logger.LogInformation("PayloadFormatterDownlink- Application formatter:{0} Container:{1} not found using default:{2}", application, containerName, blobNameDefault);
 
-                blobClient = new BlobClient(_payloadFormatterConnectionString, _applicationSettings.PayloadFormattersDownlinkContainer, _applicationSettings.PayloadFormatterDownlinkdefault);
+                blobClient = new BlobClient(_payloadFormatterConnectionString, containerName, blobNameDefault);
             }
 
             BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
