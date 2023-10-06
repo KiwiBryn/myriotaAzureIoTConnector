@@ -125,7 +125,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                 using (message)
                 {
-                    DeviceClient deviceClient = await _azuredeviceClientCache.GetAsync(terminalId);
+                    DeviceClient deviceClient = await _deviceConnectionCache.GetAsync(terminalId);
 
                     // Check that Message has property, UserApplicationId so it can be processed correctly
                     if (!message.Properties.TryGetValue("Application", out string application))

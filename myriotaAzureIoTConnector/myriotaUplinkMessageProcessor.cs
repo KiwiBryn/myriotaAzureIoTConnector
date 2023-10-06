@@ -41,16 +41,16 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         private readonly ILogger _logger;
         private readonly Models.AzureIoT _azureIoTSettings;
         private readonly Models.MyriotaSettings _myriotaSettings;
-        private readonly IDeviceConnectionCache _azuredeviceClientCache;
+        private readonly IDeviceConnectionCache _deviceConnectionCache;
         private readonly IPayloadFormatterCache _payloadFormatterCache;
 
 
-        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.MyriotaSettings> myriotaSettings, IDeviceConnectionCache azuredeviceClientCache, IPayloadFormatterCache payloadFormatterCache)
+        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.MyriotaSettings> myriotaSettings, IDeviceConnectionCache deviceConnectionCache, IPayloadFormatterCache payloadFormatterCache)
         {
             _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
             _azureIoTSettings = azureIoTSettings.Value;
             _myriotaSettings = myriotaSettings.Value;
-            _azuredeviceClientCache = azuredeviceClientCache;
+            _deviceConnectionCache = deviceConnectionCache;
             _payloadFormatterCache = payloadFormatterCache;
         }
 
@@ -195,10 +195,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
             {
                 case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, application));
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, application));
                     break;
                 case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _azuredeviceClientCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, application, cancellationToken));
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, application, cancellationToken));
                     break;
                 default:
                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
