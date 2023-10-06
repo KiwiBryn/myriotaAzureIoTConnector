@@ -9,3 +9,4 @@ The repo has the source code for the series of blog posts written as I built the
 3. [Uplink Payload Formatters](http://blog.devmobile.co.nz/2023/09/10/myriota-uplink-payload-formatters-and-caching/)
 4. [IoT Hub Connectivity](http://blog.devmobile.co.nz/2023/09/27/myriota-connector-azure-iot-hub-connectivity/)
 5. [DTDL Support](http://blog.devmobile.co.nz/2023/09/30/myriota-connector-azure-iot-hub-dtdl-support/)
+6. [Uplink Payload Formatters revisited](http://blog.devmobile.co.nz/2023/10/05/myriota-uplink-payload-formatters-revisited/)
