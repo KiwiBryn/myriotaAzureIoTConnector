@@ -127,7 +127,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     DeviceClient deviceClient = await _deviceConnectionCache.GetAsync(terminalId);
 
-                    // Check that Message has property, UserApplicationId so it can be processed correctly
+                    // Check that Message has property, Application so it can be processed correctly
                     if (!message.Properties.TryGetValue("Application", out string application))
                     {
                         _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} Application property missing", terminalId, message.LockToken);
