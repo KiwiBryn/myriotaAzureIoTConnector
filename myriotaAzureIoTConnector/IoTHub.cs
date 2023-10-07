@@ -189,11 +189,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                         return;
                     }
 
-                    if (_myriotaSettings.DownlinkEnabled)
-                    {
-                        // Send using Myriota API
-                    }
-
                     _logger.LogInformation("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payloadData {payloadData} length:{Length} sent", terminalId, message.LockToken, application, Convert.ToHexString(payloadData), payloadData.Length);
 
                     await deviceClient.CompleteAsync(message);
