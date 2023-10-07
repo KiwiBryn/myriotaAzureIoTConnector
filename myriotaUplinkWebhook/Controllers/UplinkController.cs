@@ -41,15 +41,14 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
             _logger = logger;
         }
 
-        [HttpPost("{application}")]
-        public async Task<IActionResult> Post([FromRoute]string application, [FromBody] Models.UplinkPayloadWebDto payloadWeb)
+        [HttpPost()]
+        public async Task<IActionResult> Post([FromBody] Models.UplinkPayloadWebDto payloadWeb)
         {
             try
             {
                 // Could of used AutoMapper but didn't seem worth it for one place
                 Models.UplinkPayloadQueueDto payloadQueue = new Models.UplinkPayloadQueueDto
                 {
-                    Application = application,
                     EndpointRef = payloadWeb.EndpointRef,
                     PayloadReceivedAtUtc = DateTime.UnixEpoch.AddSeconds(payloadWeb.Timestamp),
                     PayloadArrivedAtUtc = DateTime.UtcNow,

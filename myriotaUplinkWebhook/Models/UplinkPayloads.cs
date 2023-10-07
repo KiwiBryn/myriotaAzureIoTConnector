@@ -47,7 +47,6 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Models
 
     public class UplinkPayloadQueueDto
     {
-        public string Application { get; set; }
         public string EndpointRef { get; set; }
         public DateTime PayloadReceivedAtUtc { get; set; }
         public DateTime PayloadArrivedAtUtc { get; set; }
