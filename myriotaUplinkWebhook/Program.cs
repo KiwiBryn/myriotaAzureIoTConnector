@@ -32,9 +32,6 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook
             builder.Services.AddControllers();
 
             builder.Services.AddApplicationInsightsTelemetry(i => i.ConnectionString = builder.Configuration.GetConnectionString("ApplicationInsights"));
-
-            builder.Services.Configure<Models.ApplicationSettings>(builder.Configuration.GetSection("Application"));
-
             builder.Services.AddAzureClients(azureClient =>
             {
                 azureClient.AddQueueServiceClient(builder.Configuration.GetConnectionString("UplinkQueueStorage"));

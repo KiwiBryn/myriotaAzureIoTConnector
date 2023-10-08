@@ -30,13 +30,11 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
     [ApiController]
     public class UplinkController : ControllerBase
     {
-        private readonly Models.ApplicationSettings _applicationSettings;
         private readonly ILogger<UplinkController> _logger;
         private readonly QueueServiceClient _queueServiceClient;
 
-        public UplinkController(IOptions<Models.ApplicationSettings> applicationSettings, QueueServiceClient queueServiceClient, ILogger<UplinkController> logger)
+        public UplinkController(QueueServiceClient queueServiceClient, ILogger<UplinkController> logger)
         {
-            _applicationSettings = applicationSettings.Value;
             _queueServiceClient = queueServiceClient;
             _logger = logger;
         }
@@ -86,9 +84,9 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
                 }
 
                 // included payload ID for correlation as uplink message processed
-                _logger.LogInformation("SendAsync queue name:{QueueName} payload ID:{Id}", _applicationSettings.QueueName, payloadWeb.Id);
+                _logger.LogInformation("SendAsync payload ID:{Id}", payloadWeb.Id);
 
-                QueueClient queueClient = _queueServiceClient.GetQueueClient(_applicationSettings.QueueName);
+                QueueClient queueClient = _queueServiceClient.GetQueueClient("uplink");
 
                 await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadQueue)));
             }
