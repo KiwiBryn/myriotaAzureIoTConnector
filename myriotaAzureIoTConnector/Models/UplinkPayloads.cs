@@ -23,7 +23,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
     public class UplinkPayloadQueueDto
     {
-        public string Application { get; set; }
         public string EndpointRef { get; set; }
         public DateTime PayloadReceivedAtUtc { get; set; }
         public DateTime PayloadArrivedAtUtc { get; set; }
