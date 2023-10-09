@@ -15,6 +15,7 @@
 //---------------------------------------------------------------------------------
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -40,7 +41,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                  l.AddConsole();
                  l.AddApplicationInsightsWebJobs(o => o.ConnectionString = context.Configuration.GetConnectionString("ApplicationInsights"));
              })
-            .ConfigureServices(services =>
+            .ConfigureServices((hostContext,services) =>
             {
                 services.AddOptions<Models.AzureIoT>().Configure<IConfiguration>((settings, configuration) =>
                 {
@@ -57,6 +58,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     configuration.GetSection("Myriota").Bind(settings);
                 });
                 services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
+                services.AddAzureClients(azureClient =>
+                {
+                    azureClient.AddBlobServiceClient(hostContext.Configuration.GetConnectionString("PayloadFormattersStorage"));
+                });
             })
             .UseConsoleLifetime();
 
