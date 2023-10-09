@@ -113,7 +113,7 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.DownlinkPayloadFormatterTestHar
             byte[] payloadBytes;
             try
             {
-                payloadBytes = evaluatorDownlink.Evaluate(properties, options.Application, options.TerminalId, payloadJson, payloadHex);
+                payloadBytes = evaluatorDownlink.Evaluate(properties, options.TerminalId, payloadJson, payloadHex);
             }
             catch (Exception ex)
             {
