@@ -19,6 +19,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 using RestSharp;
 
@@ -27,6 +28,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public interface IMyriotaModuleAPI
     {
+        public Task<Models.Item> GetAsync(CancellationToken cancellationToken);
+
         public Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken);
 
         public Task SendAsync(string terminalId, byte[] payload, CancellationToken cancellationToken = default);
@@ -37,10 +40,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         private readonly ILogger<MyriotaModuleAPI> _logger;
         private readonly Models.MyriotaSettings _myiotaSettings;
 
-        public MyriotaModuleAPI(ILogger<MyriotaModuleAPI> logger, Models.MyriotaSettings myiotaSettings)
+        public MyriotaModuleAPI(ILogger<MyriotaModuleAPI> logger, IOptions<Models.MyriotaSettings> myiotaSettings)
         {
             _logger = logger;
-            _myiotaSettings = myiotaSettings;
+            _myiotaSettings = myiotaSettings.Value;
+        }
+
+        public async Task<Models.Item> GetAsync(CancellationToken cancellationToken)
+        {
+               throw new NotImplementedException();
         }
 
         public async Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken)
@@ -54,11 +62,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             // Need to rewrite this to handle paging
             using (RestClient client = new RestClient(restClientOptions))
             {
-                RestRequest request = new RestRequest("/v1/modules?Destinations=false");
+                RestRequest request = new RestRequest("v1/modules?Destinations=false");
 
                 request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
-                return await client.GetAsync<ICollection<Models.Item>>(request, cancellationToken);
+                Models.ModulesResponse response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
+
+                return response.Items;
             }
         }
 
