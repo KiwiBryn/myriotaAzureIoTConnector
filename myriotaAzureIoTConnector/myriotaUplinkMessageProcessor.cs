@@ -24,7 +24,6 @@ using Microsoft.Azure.Devices.Client;
 using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Functions.Worker;
 
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -36,7 +35,7 @@ using PayloadFormatter;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    public partial class MyriotaUplinkMessageProcessor
+    public class MyriotaUplinkMessageProcessor
     {
         private readonly ILogger _logger;
         private readonly Models.AzureIoT _azureIoTSettings;
@@ -142,7 +141,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, cancellationToken);
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -182,33 +181,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     }
                 }
             }
-        }
-
-        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, CancellationToken cancellationToken)
-        {
-            DeviceClient deviceClient;
-
-            switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
-            {
-                case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId ));
-                    break;
-                case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, cancellationToken));
-                    break;
-                default:
-                    _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
-
-                    throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
-            }
-
-            await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, terminalId, cancellationToken);
-
-            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
-
-            await deviceClient.OpenAsync(cancellationToken);
-
-            return deviceClient;
         }
     }
 }

@@ -57,10 +57,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     configuration.GetSection("Myriota").Bind(settings);
                 });
+           		services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
+                services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
                 services.AddAzureClients(azureClient =>
                 {
                     azureClient.AddBlobServiceClient(hostContext.Configuration.GetConnectionString("PayloadFormattersStorage"));
                 });
+                services.AddHostedService<StartUpService>();
             })
             .UseConsoleLifetime();
 
