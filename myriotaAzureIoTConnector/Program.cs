@@ -62,6 +62,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     azureClient.AddBlobServiceClient(hostContext.Configuration.GetConnectionString("PayloadFormattersStorage"));
                 });
+                services.AddHostedService<StartUpService>();
             })
             .UseConsoleLifetime();
 
