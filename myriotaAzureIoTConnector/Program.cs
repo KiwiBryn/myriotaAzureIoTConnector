@@ -56,6 +56,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     configuration.GetSection("Myriota").Bind(settings);
                 });
+                services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
             })
             .UseConsoleLifetime();
 
