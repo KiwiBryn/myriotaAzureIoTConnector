@@ -26,7 +26,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
     {
         public AzureIotHub AzureIoTHub { get; set; }
 
-        public Dictionary<string,string> ApplicationToDtdlModelIdMapping { get; set; }
+        public string DtdlModelId { get; set; } = string.Empty;
     }
 
     public class AzureIotHub
