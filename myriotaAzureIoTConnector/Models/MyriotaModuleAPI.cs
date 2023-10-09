@@ -18,45 +18,24 @@
 using System;
 using System.Collections.Generic;
 
+
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
-    public class Attributes
-    {
-        public string Name { get; set; }
-        public string Value { get; set; }
-
-    }
-
-    public class Destination
-    {
-        public string Id { get; set; }
-        public string Type { get; set; }
-        public bool SignData { get; set; }
-        public string Url { get; set; }
-    }
-
-    public class Headers
-    {
-        public string Name { get; set; }
-        public string Value { get; set; }
-
-    }
-
     public class Item
     {
         public string Id { get; set; }
-        public List<Destination> Destinations { get; set; }
-        public Attributes[] Attributes { get; set; }
-        public Headers[] Headers { get; set; }
+        public Dictionary<string, string> Destinations { get; set; }
+        public Dictionary<string, string> Attributes { get; set; }
+        public Dictionary<string, string> Headers { get; set; }
         public int MessageCount { get; set; }
         public DateTime FirstMessageTime { get; set; }
         public DateTime LastMessageTime { get; set; }
-        public string RegistrationDate { get; set; }
+        public DateTime RegistrationDate { get; set; }
     }
 
     public class ModulesResponse
     {
         public List<Item> Items { get; set; }
-        public string NextItem { get; set; }
+        public string NextItem { get; set; } = string.Empty;
     }
 }
