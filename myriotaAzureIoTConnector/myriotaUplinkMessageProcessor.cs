@@ -35,7 +35,7 @@ using PayloadFormatter;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    public partial class MyriotaUplinkMessageProcessor
+    public class MyriotaUplinkMessageProcessor
     {
         private readonly ILogger _logger;
         private readonly Models.AzureIoT _azureIoTSettings;
