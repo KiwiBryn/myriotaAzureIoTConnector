@@ -14,17 +14,10 @@
 //
 //---------------------------------------------------------------------------------
 using System;
-using System.Net;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Provisioning.Client;
-using Microsoft.Azure.Devices.Provisioning.Client.PlugAndPlay;
-using Microsoft.Azure.Devices.Provisioning.Client.Transport;
-using Microsoft.Azure.Devices.Shared;
 
 using Microsoft.Extensions.Logging;
 
@@ -36,83 +29,8 @@ using PayloadFormatter;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    public partial class MyriotaUplinkMessageProcessor
+    internal partial class DeviceConnectionCache : IDeviceConnectionCache
     {
-        private async Task<DeviceClient> DeviceConnectionStringConnectAsync(string terminalId)
-        {
-            DeviceClient deviceClient;
-
-            if (string.IsNullOrEmpty(_azureIoTSettings.DtdlModelId))
-            {
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
-            }
-            else
-            {
-                ClientOptions clientOptions = new ClientOptions()
-                {
-                    ModelId = _azureIoTSettings.DtdlModelId
-                };
-
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions);
-
-            }
-
-            return deviceClient;
-        }
-
-        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, CancellationToken cancellationToken)
-        {
-            DeviceClient deviceClient;
-
-            string deviceKey;
-            using (var hmac = new HMACSHA256(Convert.FromBase64String(_azureIoTSettings.AzureIoTHub.DeviceProvisioningService.GroupEnrollmentKey)))
-            {
-                deviceKey = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(terminalId)));
-            }
-
-            using (var securityProvider = new SecurityProviderSymmetricKey(terminalId, deviceKey, null))
-            {
-                using (var transport = new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly))
-                {
-                    DeviceRegistrationResult result;
-
-                    ProvisioningDeviceClient provClient = ProvisioningDeviceClient.Create(
-                        _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.GlobalDeviceEndpoint,
-                        _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.IdScope,
-                        securityProvider,
-                    transport);
-
-
-                    if (string.IsNullOrEmpty(_azureIoTSettings.DtdlModelId))
-                    {
-                        result = await provClient.RegisterAsync(cancellationToken);
-                    }
-                    else
-                    {
-                        ProvisioningRegistrationAdditionalData provisioningRegistrationAdditionalData = new ProvisioningRegistrationAdditionalData()
-                        {
-                            JsonData = PnpConvention.CreateDpsPayload(_azureIoTSettings.DtdlModelId)
-                        };
-
-                        result = await provClient.RegisterAsync(provisioningRegistrationAdditionalData, cancellationToken);
-                    }
-
-                    if (result.Status != ProvisioningRegistrationStatusType.Assigned)
-                    {
-                        _logger.LogWarning("Uplink-DeviceID:{0} RegisterAsync status:{1} failed ", terminalId, result.Status);
-
-                        throw new ApplicationException($"Uplink-DeviceID:{0} RegisterAsync status:{1} failed");
-                    }
-
-                    IAuthenticationMethod authentication = new DeviceAuthenticationWithRegistrySymmetricKey(result.DeviceId, (securityProvider as SecurityProviderSymmetricKey).GetPrimaryKey());
-
-                    deviceClient = DeviceClient.Create(result.AssignedHub, authentication, Constants.TransportSettings);
-                }
-            }
-
-            return deviceClient;
-        }
-
         public async Task AzureIoTHubMessageHandler(Message message, object context)
         {
             string terminalId = (string)context;
@@ -123,7 +41,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                 using (message)
                 {
-                    DeviceClient deviceClient = await _deviceConnectionCache.GetAsync(terminalId);
+                    DeviceClient deviceClient = await this.GetAsync(terminalId);
 
                     IFormatterDownlink payloadFormatterDownlink;
 
@@ -188,13 +106,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 throw;
             }
-        }
-
-        private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
-        {
-            _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", (string)userContext, methodRequest.Name, methodRequest.DataAsJson);
-
-            return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
         }
     }
 }
