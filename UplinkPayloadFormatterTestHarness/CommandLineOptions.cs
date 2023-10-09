@@ -16,15 +16,11 @@
 namespace devMobile.IoT.myriotaAzureIoTConnector.UplinkPayloadFormatterTestHarness
 { 
     using CommandLine;
-    using Newtonsoft.Json.Linq;
 
     public class CommandLineOptions
     {
         [Option('f', "Formatter", Required = true, HelpText = "payload formatter path")]
         public string FormatterPath{ get; set; }
-
-        [Option('a', "Application", Required = true, HelpText = "Application name")]
-        public string Application { get; set; }
 
         [Option('t', "TerminalId", Required = true, HelpText = "Terminal unique identitifer")]
         public string TerminalId { get; set; }

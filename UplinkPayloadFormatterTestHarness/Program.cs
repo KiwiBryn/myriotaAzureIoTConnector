@@ -94,7 +94,7 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.UplinkPayloadFormatterTestHarne
 
             try
             {
-                telemetryEvent = evalulatorUplink.Evaluate(properties, options.Application, options.TerminalId, timeStamp, payloadBytes);
+                telemetryEvent = evalulatorUplink.Evaluate(properties, options.TerminalId, timeStamp, payloadBytes);
             }
             catch (Exception ex)
             {
@@ -102,14 +102,11 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.UplinkPayloadFormatterTestHarne
                 return;
             }
 
-            telemetryEvent.TryAdd("Application", options.Application);
             telemetryEvent.TryAdd("TerminalId", options.TerminalId);
             if ( options.TimeStamp.HasValue)
             {
                 telemetryEvent.TryAdd("TimeStamp", options.TimeStamp.Value.ToString("s", CultureInfo.InvariantCulture));
             }
-            telemetryEvent.TryAdd("DataLength", payloadBytes.Length);
-            telemetryEvent.TryAdd("Data", Convert.ToHexString( payloadBytes));
 
             Console.WriteLine("Properties:");
             foreach (var property in properties)

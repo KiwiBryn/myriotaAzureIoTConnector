@@ -2,7 +2,7 @@
   "profiles": {
     "UplinkPayloadFormatterTestHarness": {
       "commandName": "Project",
-      "commandLineArgs": "-f C:\\Users\\BrynLewis\\source\\repos\\myriotaAzureIoTConnector\\PayloadFormatters\\Uplink\\tracker.cs -t 008881e3A5 -a Tracker -h 3800bd9812e6fed5e066bd8e0c65cccccccccccc"
+      "commandLineArgs": "-f C:\\Users\\BrynLewis\\source\\repos\\myriotaAzureIoTConnector\\PayloadFormatters\\Uplink\\tracker.cs -t 008881e3A5 -h 5a00749812e63bd1e066e1ab2165cccccccccccc"
     }
   }
 }
