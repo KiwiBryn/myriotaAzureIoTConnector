@@ -38,28 +38,29 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public partial class MyriotaUplinkMessageProcessor
     {
-        private async Task<DeviceClient> DeviceConnectionStringConnectAsync(string terminalId, string application)
+        private async Task<DeviceClient> DeviceConnectionStringConnectAsync(string terminalId)
         {
             DeviceClient deviceClient;
 
-            if (_azureIoTSettings.ApplicationToDtdlModelIdMapping.TryGetValue(application, out string? modelId))
+            if (string.IsNullOrEmpty(_azureIoTSettings.DtdlModelId))
             {
-                ClientOptions clientOptions = new ClientOptions()
-                {
-                    ModelId = modelId
-                };
-
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions);
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
             }
             else
             {
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
+                ClientOptions clientOptions = new ClientOptions()
+                {
+                    ModelId = _azureIoTSettings.DtdlModelId
+                };
+
+                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions);
+
             }
 
             return deviceClient;
         }
 
-        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, string application, CancellationToken cancellationToken)
+        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, CancellationToken cancellationToken)
         {
             DeviceClient deviceClient;
 
@@ -81,22 +82,19 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                         securityProvider,
                     transport);
 
-                    if (_azureIoTSettings.ApplicationToDtdlModelIdMapping.TryGetValue(application, out string? modelId))
-                    {
-                        ClientOptions clientOptions = new ClientOptions()
-                        {
-                            ModelId = modelId
-                        };
 
-                        ProvisioningRegistrationAdditionalData provisioningRegistrationAdditionalData = new ProvisioningRegistrationAdditionalData()
-                        {
-                            JsonData = PnpConvention.CreateDpsPayload(modelId)
-                        };
-                        result = await provClient.RegisterAsync(provisioningRegistrationAdditionalData, cancellationToken);
+                    if (string.IsNullOrEmpty(_azureIoTSettings.DtdlModelId))
+                    {
+                        result = await provClient.RegisterAsync(cancellationToken);
                     }
                     else
                     {
-                        result = await provClient.RegisterAsync(cancellationToken);
+                        ProvisioningRegistrationAdditionalData provisioningRegistrationAdditionalData = new ProvisioningRegistrationAdditionalData()
+                        {
+                            JsonData = PnpConvention.CreateDpsPayload(_azureIoTSettings.DtdlModelId)
+                        };
+
+                        result = await provClient.RegisterAsync(provisioningRegistrationAdditionalData, cancellationToken);
                     }
 
                     if (result.Status != ProvisioningRegistrationStatusType.Assigned)
@@ -127,25 +125,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 {
                     DeviceClient deviceClient = await _deviceConnectionCache.GetAsync(terminalId);
 
-                    // Check that Message has property, Application so it can be processed correctly
-                    if (!message.Properties.TryGetValue("Application", out string application))
-                    {
-                        _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} Application property missing", terminalId, message.LockToken);
-
-                        await deviceClient.RejectAsync(message);
-
-                        return;
-                    }
-
                     IFormatterDownlink payloadFormatterDownlink;
 
                     try
                     {
-                        payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(application);
+                        payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync();
                     }
                     catch (CSScriptLib.CompilerException cex)
                     {
-                        _logger.LogWarning(cex, "Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payload formatter compilation failed", terminalId, message.LockToken, application);
+                        _logger.LogWarning(cex, "Downlink-terminalID:{terminalId} LockToken:{LockToken} payload formatter compilation failed", terminalId, message.LockToken);
 
                         await deviceClient.RejectAsync(message);
 
@@ -160,20 +148,20 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     {
                         payloadJson = JObject.Parse(Encoding.UTF8.GetString(payloadBytes));
                     }
-                    catch( ArgumentException aex)
+                    catch (ArgumentException aex)
                     {
                         _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} payload not valid Text", terminalId, message.LockToken);
                     }
-                    catch ( JsonReaderException jex)
+                    catch (JsonReaderException jex)
                     {
                         _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} payload not valid JSON", terminalId, message.LockToken);
                     }
 
-                    byte[] payloadData = payloadFormatterDownlink.Evaluate(message.Properties, application, terminalId, payloadJson, payloadBytes);
+                    byte[] payloadData = payloadFormatterDownlink.Evaluate(message.Properties, terminalId, payloadJson, payloadBytes);
 
                     if (payloadData is null)
                     {
-                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payload formatter returned null", terminalId, message.LockToken, application);
+                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} payload formatter returned null", terminalId, message.LockToken);
 
                         await deviceClient.RejectAsync(message);
 
@@ -182,14 +170,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     if ((payloadData.Length < Constants.DownlinkPayloadMinimumLength) || (payloadData.Length > Constants.DownlinkPayloadMaximumLength))
                     {
-                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", terminalId, message.LockToken, application, payloadData.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
+                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", terminalId, message.LockToken, payloadData.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
                         await deviceClient.RejectAsync(message);
 
                         return;
                     }
 
-                    _logger.LogInformation("Downlink-terminalID:{terminalId} LockToken:{LockToken} Application:{application} payloadData {payloadData} length:{Length} sent", terminalId, message.LockToken, application, Convert.ToHexString(payloadData), payloadData.Length);
+                    _logger.LogInformation("Downlink-terminalID:{terminalId} LockToken:{LockToken} payloadData {payloadData} length:{Length} sent", terminalId, message.LockToken, Convert.ToHexString(payloadData), payloadData.Length);
 
                     await deviceClient.CompleteAsync(message);
                 }
@@ -201,7 +189,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 throw;
             }
         }
-        
+
         private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
         {
             _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", (string)userContext, methodRequest.Name, methodRequest.DataAsJson);
