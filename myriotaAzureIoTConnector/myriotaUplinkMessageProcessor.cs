@@ -55,7 +55,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         [Function("UplinkMessageProcessor")]
         public async Task UplinkMessageProcessor([QueueTrigger("uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
         {
-            _logger.LogInformation("Uplink- PayloadId:{0} Application:{1} ReceivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{3:yyyy:MM:dd HH:mm:ss} Endpoint:{4} Packets:{5}", payload.Id, payload.Application, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
+            _logger.LogInformation("Uplink- PayloadId:{0} ReceivedAtUTC:{1:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} Endpoint:{3} Packets:{4}", payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
             if (_logger.IsEnabled(LogLevel.Debug))
             {
@@ -65,22 +65,22 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
             }
 
-            // Get the payload formatter for Application from Azure Storage container, compile, and then cache binary.
+            // Get the payload formatter from Azure Storage container, compile, and then cache binary.
             IFormatterUplink payloadFormatterUplink;
 
             try
             {
-                payloadFormatterUplink = await _payloadFormatterCache.UplinkGetAsync(payload.Application, cancellationToken);
+                payloadFormatterUplink = await _payloadFormatterCache.UplinkGetAsync(cancellationToken);
             }
             catch (CSScriptLib.CompilerException cex)
             {
-                _logger.LogError(cex, "Uplink- PayloadID:{0} Application:{1} payload formatter compilation failed", payload.Id, payload.Application);
+                _logger.LogError(cex, "Uplink- PayloadID:{0} payload formatter compilation failed", payload.Id);
 
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Uplink- PayloadID:{0} Application:{1} payload formatter load failed", payload.Id, payload.Application);
+                _logger.LogError(ex, "Uplink- PayloadID:{0} payload formatter load failed", payload.Id);
 
                 throw;
             }
@@ -102,13 +102,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw;
                 }
 
-                // Process the payload with application specific formatter
+                // Process the payload with configured formatter
                 Dictionary<string, string> properties = new Dictionary<string, string>();
                 JObject telemetryEvent;
 
                 try
                 {
-                    telemetryEvent = payloadFormatterUplink.Evaluate(properties, payload.Application, packet.TerminalId, packet.Timestamp, payloadBytes);
+                    telemetryEvent = payloadFormatterUplink.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
                 }
                 catch (Exception ex)
                 {
@@ -126,7 +126,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 // Enrich the telemetry event with metadata, using TryAdd as some of the values may have been added by the formatter
                 telemetryEvent.TryAdd("PayloadId", payload.Id);
-                telemetryEvent.TryAdd("Application", payload.Application);
                 telemetryEvent.TryAdd("EndpointReference", payload.EndpointRef);
                 telemetryEvent.TryAdd("TerminalId", packet.TerminalId);
                 telemetryEvent.TryAdd("PacketArrivedAtUtc", packet.Timestamp.ToString("s", CultureInfo.InvariantCulture));
@@ -143,7 +142,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                 try
                 {
-                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, payload.Application, cancellationToken);
+                    deviceClient = await DeviceConnectionGetOrAddAsync(packet.TerminalId, cancellationToken);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -168,7 +167,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     // Populate the message properties, using TryAdd as some of the properties may have been added by the formatter
                     ioTHubmessage.Properties.TryAdd("PayloadId", payload.Id);
-                    ioTHubmessage.Properties.TryAdd("Application", payload.Application);
                     ioTHubmessage.Properties.TryAdd("EndpointReference", payload.EndpointRef);
                     ioTHubmessage.Properties.TryAdd("TerminalId", packet.TerminalId);
 
@@ -186,17 +184,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
         }
 
-        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, string application, CancellationToken cancellationToken)
+        public async Task<DeviceClient> DeviceConnectionGetOrAddAsync(string terminalId, CancellationToken cancellationToken)
         {
             DeviceClient deviceClient;
 
             switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
             {
                 case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, application));
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId ));
                     break;
                 case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, application, cancellationToken));
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, cancellationToken));
                     break;
                 default:
                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
