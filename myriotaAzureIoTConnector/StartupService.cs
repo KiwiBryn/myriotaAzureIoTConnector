@@ -19,29 +19,24 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
  namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     using System;
-    using System.Net.Sockets;
-    using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
-    using DotNetty.Codecs.Mqtt.Packets;
-    using Microsoft.Azure.Devices.Client;
+
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Options;
-
+ 
+ 
     public class StartUpService : BackgroundService
     {
         private readonly ILogger<StartUpService> _logger;
         private readonly IDeviceConnectionCache _deviceConnectionCache;
         private readonly IMyriotaModuleAPI _myriotaModuleAPI;
-        private readonly Models.AzureIoT _azureIoTSettings;
 
-        public StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache, IMyriotaModuleAPI myriotaModuleAPI, IOptions<Models.AzureIoT> azureIoTSettings)
+        public StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache, IMyriotaModuleAPI myriotaModuleAPI)
         {
             _logger = logger;
             _deviceConnectionCache = deviceConnectionCache;
             _myriotaModuleAPI = myriotaModuleAPI;
-            _azureIoTSettings = azureIoTSettings.Value;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -52,16 +47,16 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
             try
             {
-                _logger.LogInformation("BumblebeeHiveCacheRefresh start");
+                _logger.LogInformation("Myriota connection cache load start");
 
                 foreach (Models.Item item in await _myriotaModuleAPI.ListAsync(cancellationToken))
                 {
-                    _logger.LogInformation("BumblebeeHiveCacheRefresh DeviceId:{DeviceId} DeviceName:{DeviceName}", item.Id);
+                    _logger.LogInformation("Myriota TerminalId:{TerminalId}", item.Id);
 
-                    //await _deviceConnectionCache.GetOrAddAsync(item.Id, ,cancellationToken);
+                   await _deviceConnectionCache.GetOrAddAsync(item.Id,cancellationToken);
                 }
 
-                _logger.LogInformation("BumblebeeHiveCacheRefresh finish");
+                _logger.LogInformation("Myriota connection cache load finish");
             }
             catch (Exception ex)
             {
