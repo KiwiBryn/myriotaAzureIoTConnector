@@ -64,10 +64,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
             {
                 case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId));
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId), memoryCacheEntryOptions);
                     break;
                 case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, cancellationToken));
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, cancellationToken), memoryCacheEntryOptions);
                     break;
                 default:
                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
