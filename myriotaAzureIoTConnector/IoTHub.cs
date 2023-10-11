@@ -51,7 +51,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     }
                     catch (CSScriptLib.CompilerException cex)
                     {
-                        _logger.LogWarning(cex, "Downlink-terminalID:{terminalId} LockToken:{LockToken} payload formatter compilation failed", terminalId, message.LockToken);
+                        _logger.LogWarning(cex, "Downlink-TerminalID:{terminalId} LockToken:{LockToken} payload formatter compilation failed", terminalId, message.LockToken);
 
                         await deviceClient.RejectAsync(message);
 
@@ -68,18 +68,18 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     }
                     catch (ArgumentException aex)
                     {
-                        _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} payload not valid Text", terminalId, message.LockToken);
+                        _logger.LogInformation("Downlink-TerminalID:{terminalId} LockToken:{LockToken} payload not valid Text", terminalId, message.LockToken);
                     }
                     catch (JsonReaderException jex)
                     {
-                        _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} payload not valid JSON", terminalId, message.LockToken);
+                        _logger.LogInformation("Downlink-TerminalID:{terminalId} LockToken:{LockToken} payload not valid JSON", terminalId, message.LockToken);
                     }
 
                     byte[] payloadData = payloadFormatterDownlink.Evaluate(message.Properties, terminalId, payloadJson, payloadBytes);
 
                     if (payloadData is null)
                     {
-                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} payload formatter returned null", terminalId, message.LockToken);
+                        _logger.LogWarning("Downlink-TerminalID:{terminalId} LockToken:{LockToken} payload formatter returned null", terminalId, message.LockToken);
 
                         await deviceClient.RejectAsync(message);
 
@@ -88,7 +88,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     if ((payloadData.Length < Constants.DownlinkPayloadMinimumLength) || (payloadData.Length > Constants.DownlinkPayloadMaximumLength))
                     {
-                        _logger.LogWarning("Downlink-terminalID:{terminalId} LockToken:{LockToken} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", terminalId, message.LockToken, payloadData.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
+                        _logger.LogWarning("Downlink-TerminalID:{terminalId} LockToken:{LockToken} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", terminalId, message.LockToken, payloadData.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
                         await deviceClient.RejectAsync(message);
 
@@ -97,14 +97,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     await _myriotaModuleAPI.SendAsync(terminalId, payloadData);
 
-                    _logger.LogInformation("Downlink-terminalID:{terminalId} LockToken:{LockToken} payloadData {payloadData} length:{Length} sent", terminalId, message.LockToken, Convert.ToHexString(payloadData), payloadData.Length);
+                    _logger.LogInformation("Downlink-TerminalID:{terminalId} LockToken:{LockToken} payloadData {payloadData} length:{Length} sent", terminalId, message.LockToken, Convert.ToHexString(payloadData), payloadData.Length);
 
                     await deviceClient.CompleteAsync(message);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Downlink-MessageHandler processing failed");
+                _logger.LogError(ex, "Downlink-TerminalID:{terminalId} LockToken:{LockToken} MessageHandler processing failed", terminalId, message.LockToken);
 
                 throw;
             }
