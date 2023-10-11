@@ -35,7 +35,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         {
             string terminalId = (string)context;
 
-            _logger.LogInformation("Downlink-IoT Hub TerminalId:{termimalId} LockToken:{LockToken}", terminalId, message.LockToken);
+            _logger.LogInformation("Downlink-IoT Hub TerminalID:{termimalId} LockToken:{LockToken}", terminalId, message.LockToken);
 
             try
             {
