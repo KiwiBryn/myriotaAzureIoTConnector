@@ -47,14 +47,16 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         private readonly ILogger _logger;
         private readonly Models.AzureIoT _azureIoTSettings;
         private readonly IPayloadFormatterCache _payloadFormatterCache;
+        private readonly IMyriotaModuleAPI _myriotaModuleAPI;
 
         private static readonly IAppCache _deviceConnectionCache = new CachingService();
 
-        public DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IPayloadFormatterCache payloadFormatterCache)
+        public DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IPayloadFormatterCache payloadFormatterCache, IMyriotaModuleAPI myriotaModuleAPI)
         {
             _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
             _azureIoTSettings = azureIoTSettings.Value;
             _payloadFormatterCache = payloadFormatterCache;
+            _myriotaModuleAPI = myriotaModuleAPI;
         }
 
         public async Task<DeviceClient> GetOrAddAsync(string terminalId, CancellationToken cancellationToken)
@@ -76,6 +78,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
 
             await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
+
+            await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, terminalId);
 
             await deviceClient.OpenAsync(cancellationToken);
 

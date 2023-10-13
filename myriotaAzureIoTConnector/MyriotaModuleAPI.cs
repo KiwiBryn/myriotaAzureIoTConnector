@@ -28,11 +28,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public interface IMyriotaModuleAPI
     {
-        public Task<Models.Item> GetAsync(CancellationToken cancellationToken);
-
         public Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken);
 
-        public Task SendAsync(string terminalId, byte[] payload, CancellationToken cancellationToken = default);
+        public Task<string> SendAsync(string terminalId, byte[] payload, CancellationToken cancellationToken = default);
     }
 
     internal class MyriotaModuleAPI : IMyriotaModuleAPI
@@ -44,11 +42,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         {
             _logger = logger;
             _myiotaSettings = myiotaSettings.Value;
-        }
-
-        public async Task<Models.Item> GetAsync(CancellationToken cancellationToken)
-        {
-               throw new NotImplementedException();
         }
 
         public async Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken)
@@ -72,12 +65,37 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
         }
 
-        public async Task SendAsync(string terminalId, byte[] payload, CancellationToken cancellationToken = default)
+        public async Task<String> SendAsync(string terminalId, byte[] payload, CancellationToken cancellationToken = default)
         {
+            Models.ControlMessageSendRequest sendRequest = new Models.ControlMessageSendRequest()
+            {
+                ModuleId = terminalId,
+                Message = Convert.ToBase64String(payload),
+            };
+
+            RestClientOptions restClientOptions = new RestClientOptions()
+            {
+                BaseUrl = new Uri(_myiotaSettings.BaseUrl),
+                ThrowOnAnyError = true,
+            };
+
             if (_myiotaSettings.DownlinkEnabled)
             {
-                // Send using Myriota API
+                using (RestClient client = new RestClient(restClientOptions))
+                {
+                    RestRequest request = new RestRequest("v1/control-messages/", Method.Post);
+
+                    request.AddBody(sendRequest);
+
+                    request.AddHeader("Authorization", _myiotaSettings.ApiToken);
+
+                    Models.ControlMessageSendResponse sendResponse = await client.PostAsync<Models.ControlMessageSendResponse>(request, cancellationToken);
+
+                    return sendResponse.Id;
+                }
             }
+
+            return string.Empty;
         }
     }
 }
