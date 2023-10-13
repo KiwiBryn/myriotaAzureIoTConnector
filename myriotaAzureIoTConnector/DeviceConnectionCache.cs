@@ -77,9 +77,21 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
             }
 
-            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
+            switch( _azureIoTSettings.ApplicationType)
+            {
+                case Models.AzureIoTApplicationType.IoTHub:
+                    await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, terminalId);
+                    break;
+                case Models.AzureIoTApplicationType.IoTCentral:
+                    await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTCentralMessageHandler, terminalId);
+                    break;
+                default:
+                    _logger.LogError("Uplink- Azure IoT Hub ApplicationType unknown {0}", _azureIoTSettings.ApplicationType);
 
-            await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, terminalId);
+                    throw new NotImplementedException("AzureIoT Hub unsupported ApplicationType");
+            }
+
+            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
 
             await deviceClient.OpenAsync(cancellationToken);
 

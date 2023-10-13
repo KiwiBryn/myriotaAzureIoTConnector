@@ -22,21 +22,23 @@ using Newtonsoft.Json.Converters;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
-    public class AzureIoT
+    public enum AzureIoTApplicationType
     {
-        public AzureIotHub AzureIoTHub { get; set; }
-
-        public string DtdlModelId { get; set; } = string.Empty;
+        Undefined = 0,
+        IoTHub,
+        IoTCentral
     }
 
-    public class AzureIotHub
+    public class AzureIoT
     {
         [JsonConverter(typeof(StringEnumConverter))]
-        public AzureIotHubConnectionType ConnectionType { get; set; }
+        public AzureIoTApplicationType ApplicationType;
 
-        public string ConnectionString { get; set; } = string.Empty;
+        public AzureIotHub AzureIoTHub { get; set; }
 
-        public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
+        public AzureIoTCentralSetting AzureIoTCentral { get; set; }
+
+        public string DtdlModelId { get; set; } = string.Empty;
     }
 
     public enum AzureIotHubConnectionType
@@ -53,5 +55,20 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
         public string IdScope { get; set; } = string.Empty;
 
         public string GroupEnrollmentKey { get; set; } = string.Empty;
+    }
+
+    public class AzureIotHub
+    {
+        [JsonConverter(typeof(StringEnumConverter))]
+        public AzureIotHubConnectionType ConnectionType { get; set; }
+
+        public string ConnectionString { get; set; } = string.Empty;
+
+        public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
+    }
+
+    public class AzureIoTCentralSetting
+    {
+        public Dictionary<string, string> Methods { get; set; }
     }
 }

@@ -44,18 +44,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     IFormatterDownlink payloadFormatterDownlink;
 
                     // Check that Message has property, method-name so it can be processed correctly
-                    if (!message.Properties.TryGetValue("method-name", out string methodName) || string.IsNullOrWhiteSpace(methodName))
+                    if (!message.Properties.TryGetValue("method-name", out string methodName)) 
                     {
-                        _logger.LogWarning("Downlink-TerminalID:{DeviceId} LockToken:{LockToken} method-name:property missing or empty", terminalId, message.LockToken);
+                        _logger.LogWarning("Downlink-TerminalID:{DeviceId} LockToken:{LockToken} method-name:property missing", terminalId, message.LockToken);
 
                         await deviceClient.RejectAsync(message);
 
                         return;
                     }
 
-                    /*
                     // Look up the method settings to get UserApplicationId and optional downlink message payload JSON.
-                    if ((_azureIoTSettings.AzureIoTCentral.Methods == null) || !_azureIoTSettings.AzureIoTCentral.Methods.TryGetValue(methodName, out Models.AzureIoTCentralMethodSetting methodSetting))
+                    if ((_azureIoTSettings.AzureIoTCentral.Methods == null) || !_azureIoTSettings.AzureIoTCentral.Methods.TryGetValue(methodName, out string command))
                     {
                         _logger.LogWarning("Downlink-TerminalID:{terminalId} LockToken:{LockToken} method-name:{methodName} has no settings", terminalId, message.LockToken, methodName);
 
@@ -63,7 +62,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                         return;
                     }
-                    */
 
                     try
                     {
@@ -97,20 +95,20 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     /*
                     // Check to see if special case for Azure IoT central command with no request payload
-                    if (payloadText.IsPayloadEmpty())
+                    if ((payloadBytes.Length == 1) && (payloadBytes[0].CompareTo("@") == 0))
                     {
-                        if (methodSetting.Payload.IsPayloadValidJson())
-                        {
-                            payloadJson = JObject.Parse(methodSetting.Payload);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Downlink-TerminalId:{terminalId} LockToken:{LockToken} method-name:{methodName} IsPayloadValidJson:{Payload} failed", terminalId, message.LockToken, methodName, methodSetting.Payload);
+                        //if (_azureIoTSettings.AzureIoTCentral.Methods.IsPayloadValidJson())
+                        //{
+                        //    payloadJson = JObject.Parse(methodSetting.Payload);
+                        //}
+                        //else
+                        //{
+                        //    _logger.LogWarning("Downlink-TerminalId:{terminalId} LockToken:{LockToken} method-name:{methodName} IsPayloadValidJson:{Payload} failed", terminalId, message.LockToken, methodName, methodSetting.Payload);
 
-                            await deviceClient.RejectAsync(message);
+                        //    await deviceClient.RejectAsync(message);
 
-                            return;
-                        }
+                        //    return;
+                        //}
                     }
                     else
                     {
@@ -167,5 +165,31 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 throw;
             }
         }
+
+        public static bool IsPayloadEmpty(string payloadText)
+        {
+            return payloadText == "@";
+        }
+
+        public static bool IsPayloadValidJson(string payloadText)
+        {
+            // In this scenario a valid JSON string should start/end with {/} for an object or [/] for an array
+            if ((payloadText.StartsWith("{") && payloadText.EndsWith("}")) || ((payloadText.StartsWith("[") && payloadText.EndsWith("]"))))
+            {
+                try
+                {
+                    var obj = JToken.Parse(payloadText);
+                }
+                catch (JsonReaderException)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            return false;
+        }
     }
 }
+
