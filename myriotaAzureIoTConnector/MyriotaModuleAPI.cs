@@ -54,7 +54,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 ThrowOnAnyError = true,
             };
 
-            // Need to rewrite this to handle paging
             using (RestClient client = new RestClient(restClientOptions))
             {
                 RestRequest request = new RestRequest($"v1/modules/{TerminalId}?Destinations=false");
