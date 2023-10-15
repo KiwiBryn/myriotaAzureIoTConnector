@@ -30,13 +30,11 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
     {
         private readonly ILogger<StartUpService> _logger;
         private readonly IDeviceConnectionCache _deviceConnectionCache;
-        private readonly IMyriotaModuleAPI _myriotaModuleAPI;
 
-        public StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache, IMyriotaModuleAPI myriotaModuleAPI)
+        public StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache)
         {
             _logger = logger;
             _deviceConnectionCache = deviceConnectionCache;
-            _myriotaModuleAPI = myriotaModuleAPI;
         }
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
@@ -49,12 +47,7 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
             {
                 _logger.LogInformation("Myriota connection cache load start");
 
-                foreach (Models.Item item in await _myriotaModuleAPI.ListAsync(cancellationToken))
-                {
-                    _logger.LogInformation("Myriota TerminalId:{TerminalId}", item.Id);
-
-                   await _deviceConnectionCache.GetOrAddAsync(item.Id,cancellationToken);
-                }
+                await _deviceConnectionCache.TerminalListLoad(cancellationToken);
 
                 _logger.LogInformation("Myriota connection cache load finish");
             }
