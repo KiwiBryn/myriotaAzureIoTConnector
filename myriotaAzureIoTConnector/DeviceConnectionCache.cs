@@ -14,6 +14,7 @@
 //
 //---------------------------------------------------------------------------------
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -39,7 +40,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     {
         public Task<DeviceClient> GetOrAddAsync(string terminalId, CancellationToken cancellationToken);
 
-        public Task<DeviceClient> GetAsync(string terminalId);
+        public Task<DeviceClient> GetOrAddAsync(string terminalId, Dictionary<string, string> attributes, CancellationToken cancellationToken);
+
+        public Task TerminalListLoad(CancellationToken cancellationToken);
     }
 
     internal partial class DeviceConnectionCache : IDeviceConnectionCache
@@ -61,15 +64,32 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
         public async Task<DeviceClient> GetOrAddAsync(string terminalId, CancellationToken cancellationToken)
         {
+            Models.Item item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
+
+            return await GetOrAddAsync(terminalId, item.Attributes, cancellationToken);
+        }
+
+        public async Task<DeviceClient> GetOrAddAsync(string terminalId, Dictionary<string, string> attributes, CancellationToken cancellationToken)
+        { 
             DeviceClient deviceClient;
+
+            if (!attributes.TryGetValue("DeviceType", out string moduleType))
+            {
+                moduleType = _azureIoTSettings.ModuleType;
+            }
+
+            if (!attributes.TryGetValue("DtdlModelId", out string dtdlModelId))
+            {
+                dtdlModelId = _azureIoTSettings.DtdlModelId;
+            }
 
             switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
             {
                 case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId), memoryCacheEntryOptions);
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, dtdlModelId), memoryCacheEntryOptions);
                     break;
                 case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, cancellationToken), memoryCacheEntryOptions);
+                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, dtdlModelId, cancellationToken), memoryCacheEntryOptions);
                     break;
                 default:
                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
@@ -77,38 +97,39 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
             }
 
-            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
+            Models.DeviceConnectionContext context  = new Models.DeviceConnectionContext()
+            {
+                TerminalId = terminalId,
+                DeviceClient = deviceClient,
+                ModuleType = moduleType,
+                Attibutes = new Dictionary<string, string>(attributes)
+            };
 
-            await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, terminalId);
+            await deviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, context, cancellationToken);
+
+            await deviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
 
             await deviceClient.OpenAsync(cancellationToken);
 
             return deviceClient;
         }
 
-        private async Task<DeviceClient> DeviceConnectionStringConnectAsync(string terminalId)
+        private async Task<DeviceClient> DeviceConnectionStringConnectAsync(string terminalId, string dtdlModelId)
         {
-            DeviceClient deviceClient;
+            ClientOptions clientOptions = null;
 
-            if (string.IsNullOrEmpty(_azureIoTSettings.DtdlModelId))
+            if (!string.IsNullOrEmpty(dtdlModelId))
             {
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings);
-            }
-            else
-            {
-                ClientOptions clientOptions = new ClientOptions()
+                clientOptions = new ClientOptions()
                 {
-                    ModelId = _azureIoTSettings.DtdlModelId
+                    ModelId = dtdlModelId
                 };
-
-                deviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions);
-
             }
 
-            return deviceClient;
+            return DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions);
         }
 
-        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, CancellationToken cancellationToken)
+        private async Task<DeviceClient> DeviceProvisioningServiceConnectAsync(string terminalId, string dtdlModelId, CancellationToken cancellationToken)
         {
             DeviceClient deviceClient;
 
@@ -130,19 +151,18 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                         securityProvider,
                     transport);
 
-
-                    if (string.IsNullOrEmpty(_azureIoTSettings.DtdlModelId))
-                    {
-                        result = await provClient.RegisterAsync(cancellationToken);
-                    }
-                    else
+                    if (!string.IsNullOrEmpty(dtdlModelId))
                     {
                         ProvisioningRegistrationAdditionalData provisioningRegistrationAdditionalData = new ProvisioningRegistrationAdditionalData()
                         {
-                            JsonData = PnpConvention.CreateDpsPayload(_azureIoTSettings.DtdlModelId)
+                            JsonData = PnpConvention.CreateDpsPayload(dtdlModelId)
                         };
 
                         result = await provClient.RegisterAsync(provisioningRegistrationAdditionalData, cancellationToken);
+                    }
+                    else
+                    {
+                        result = await provClient.RegisterAsync(cancellationToken);
                     }
 
                     if (result.Status != ProvisioningRegistrationStatusType.Assigned)
@@ -161,14 +181,21 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             return deviceClient;
         }
 
-        public async Task<DeviceClient> GetAsync(string terminalId)
+        public async Task TerminalListLoad(CancellationToken cancellationToken)
         {
-            return await _deviceConnectionCache.GetAsync<DeviceClient>(terminalId);
+            foreach (Models.Item item in await _myriotaModuleAPI.ListAsync(cancellationToken))
+            {
+                _logger.LogInformation("Myriota TerminalId:{TerminalId}", item.Id);
+
+                await this.GetOrAddAsync(item.Id, item.Attributes,cancellationToken );
+            }
         }
 
         private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
         {
-            _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", (string)userContext, methodRequest.Name, methodRequest.DataAsJson);
+            Models.DeviceConnectionContext deviceConnectionContext = (Models.DeviceConnectionContext)userContext;
+
+            _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", deviceConnectionContext.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
 
             return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
         }
