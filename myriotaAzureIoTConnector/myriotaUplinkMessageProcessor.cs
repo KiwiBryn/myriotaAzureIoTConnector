@@ -38,15 +38,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     public class MyriotaUplinkMessageProcessor
     {
         private readonly ILogger _logger;
-        private readonly Models.AzureIoT _azureIoTSettings;
         private readonly IDeviceConnectionCache _deviceConnectionCache;
         private readonly IPayloadFormatterCache _payloadFormatterCache;
 
 
-        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IDeviceConnectionCache deviceConnectionCache, IPayloadFormatterCache payloadFormatterCache)
+        public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IDeviceConnectionCache deviceConnectionCache, IPayloadFormatterCache payloadFormatterCache)
         {
             _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
-            _azureIoTSettings = azureIoTSettings.Value;
             _deviceConnectionCache = deviceConnectionCache;
             _payloadFormatterCache = payloadFormatterCache;
         }
