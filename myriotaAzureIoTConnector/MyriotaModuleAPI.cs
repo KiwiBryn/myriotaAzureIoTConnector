@@ -28,6 +28,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
     public interface IMyriotaModuleAPI
     {
+        public Task<Models.Item> GetAsync(string TerminalId, CancellationToken cancellationToken);
+
         public Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken);
 
         public Task<string> SendAsync(string terminalId, byte[] payload, CancellationToken cancellationToken = default);
@@ -42,6 +44,27 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
         {
             _logger = logger;
             _myiotaSettings = myiotaSettings.Value;
+        }
+
+        public async Task<Models.Item> GetAsync(string TerminalId, CancellationToken cancellationToken)
+        {
+            RestClientOptions restClientOptions = new RestClientOptions()
+            {
+                BaseUrl = new Uri(_myiotaSettings.BaseUrl),
+                ThrowOnAnyError = true,
+            };
+
+            // Need to rewrite this to handle paging
+            using (RestClient client = new RestClient(restClientOptions))
+            {
+                RestRequest request = new RestRequest($"v1/modules/{TerminalId}?Destinations=false");
+
+                request.AddHeader("Authorization", _myiotaSettings.ApiToken);
+
+                Models.ModulesResponse response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
+
+                return response.Items[0];
+            }
         }
 
         public async Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken)
