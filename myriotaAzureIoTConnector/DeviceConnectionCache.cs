@@ -78,7 +78,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
             }
 
-            await context.DeviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, terminalId, cancellationToken);
+            await context.DeviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, context, cancellationToken);
 
             await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
 
@@ -199,9 +199,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
         private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
         {
-            string terminalId = (string)userContext;
+            Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
 
-            _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", terminalId, methodRequest.Name, methodRequest.DataAsJson);
+            _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", context.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
 
             return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
         }
