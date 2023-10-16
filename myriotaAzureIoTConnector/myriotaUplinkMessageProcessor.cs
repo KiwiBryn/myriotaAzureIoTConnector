@@ -25,7 +25,6 @@ using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Functions.Worker;
 
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -135,11 +134,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                 }
 
                 // Lookup the device client in the cache or create a new one
-                DeviceClient deviceClient;
+                Models.DeviceConnectionContext context;
 
                 try
                 {
-                    deviceClient = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
+                    context = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
                 }
                 catch (DeviceNotFoundException dnfex)
                 {
@@ -169,7 +168,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     try
                     {
-                        await deviceClient.SendEventAsync(ioTHubmessage, cancellationToken);
+                        await context.DeviceClient.SendEventAsync(ioTHubmessage, cancellationToken);
                     }
                     catch (Exception sex)
                     {
