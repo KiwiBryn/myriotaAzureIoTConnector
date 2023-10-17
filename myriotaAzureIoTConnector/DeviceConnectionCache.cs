@@ -36,13 +36,6 @@ using LazyCache;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    public interface IDeviceConnectionCache
-    {
-        public Task<Models.DeviceConnectionContext> GetOrAddAsync(string terminalId, CancellationToken cancellationToken);
-
-        public Task TerminalListLoad(CancellationToken cancellationToken);
-    }
-
     internal partial class DeviceConnectionCache : IDeviceConnectionCache
     {
         private readonly ILogger _logger;

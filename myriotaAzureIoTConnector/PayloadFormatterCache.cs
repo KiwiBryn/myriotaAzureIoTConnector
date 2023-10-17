@@ -30,13 +30,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
     using PayloadFormatter;
 
 
-    public interface IPayloadFormatterCache
-    {
-        public Task<IFormatterUplink> UplinkGetAsync(CancellationToken cancellationToken);
-
-        public Task<IFormatterDownlink> DownlinkGetAsync(CancellationToken cancellationToken = default(CancellationToken));
-    }
-
     public class PayloadFormatterCache : IPayloadFormatterCache
     {
         private readonly ILogger<PayloadFormatterCache> _logger;
