@@ -45,7 +45,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                     try
                     {
-                        payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync();
+                        payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(deviceConnectionContext.PayloadFormatterDownlink);
                     }
                     catch (CSScriptLib.CompilerException cex)
                     {
