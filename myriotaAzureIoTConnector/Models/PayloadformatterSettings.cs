@@ -17,10 +17,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
     public class PayloadformatterSettings
     {
-        public string PayloadFormattersUplinkContainer { get; set; } = string.Empty;
-        public string PayloadFormatterUplinkDefault { get; set; } = string.Empty;
+        public string UplinkContainer { get; set; } = string.Empty;
+        public string UplinkFormatterDefault { get; set; } = string.Empty;
 
-        public string PayloadFormattersDownlinkContainer { get; set; } = string.Empty;
-        public string PayloadFormatterDownlinkdefault { get; set; } = string.Empty;
+        public string DownlinkContainer { get; set; } = string.Empty;
+        public string DownlinkFormatterDefault { get; set; } = string.Empty;
     }
 }

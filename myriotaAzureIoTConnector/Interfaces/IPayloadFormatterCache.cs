@@ -23,8 +23,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
    public interface IPayloadFormatterCache
    {
-      public Task<IFormatterUplink> UplinkGetAsync(CancellationToken cancellationToken);
+      public Task<IFormatterUplink> UplinkGetAsync(string payloadFormatter, CancellationToken cancellationToken);
 
-      public Task<IFormatterDownlink> DownlinkGetAsync(CancellationToken cancellationToken = default(CancellationToken));
+      public Task<IFormatterDownlink> DownlinkGetAsync(string payloadFormatter, CancellationToken cancellationToken = default(CancellationToken));
    }
 }
