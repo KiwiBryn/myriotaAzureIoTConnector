@@ -48,7 +48,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       }
 
       [Function("UplinkMessageProcessor")]
-      public async Task UplinkMessageProcessor([QueueTrigger("uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
+      [QueueOutput(queueName: "uplink-poison", Connection = "UplinkQueueStorage")]
+      public async Task<Models.UplinkPayloadQueueDto> UplinkMessageProcessor([QueueTrigger(queueName: "uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
       {
          _logger.LogInformation("Uplink- PayloadId:{0} ReceivedAtUTC:{1:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} Endpoint:{3} Packets:{4}", payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
@@ -74,9 +75,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogError(dnfex, "Uplink- PayloadId:{0} TerminalId:{1} terminal not found", payload.Id, packet.TerminalId);
 
-               return;
+               return payload;
             }
-            catch (Exception ex)
+            catch (Exception ex) // Maybe just send to poison queue or figure if transient error?
             {
                _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} ", payload.Id, packet.TerminalId);
 
@@ -94,13 +95,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogError(cex, "Uplink- PayloadID:{0} payload formatter compilation failed", payload.Id);
 
-               throw;
+               return payload;
             }
             catch (Exception ex)
             {
                _logger.LogError(ex, "Uplink- PayloadID:{0} payload formatter load failed", payload.Id);
 
-               throw;
+               return payload;
             }
 
             byte[] payloadBytes;
@@ -114,7 +115,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogError(fex, "Uplink- Payload:{0} TerminalId:{1} Convert.FromHexString({2}) failed", payload.Id, packet.TerminalId, packet.Value);
 
-               throw;
+               return payload;
             }
 
             // Process the payload with configured formatter
@@ -129,14 +130,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
 
-               throw;
+               return payload;
             }
 
             if (telemetryEvent is null)
             {
                _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed returned null", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
 
-               throw new ArgumentNullException();
+               return payload;
             }
 
             // Enrich the telemetry event with metadata, using TryAdd as some of the values may have been added by the formatter
@@ -169,14 +170,30 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                {
                   await context.DeviceClient.SendEventAsync(ioTHubmessage, cancellationToken);
                }
-               catch (Exception sex)
+               catch (IotHubException ex)
                {
-                  _logger.LogError(sex, "Uplink- PayloadId:{0} TerminalId:{1} SendEventAsync failed", payload.Id, packet.TerminalId);
+                  if (ex.IsTransient)
+                  {
+                     _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} SendEventAsync transient failure", payload.Id, packet.TerminalId);
 
-                  throw;
+                     throw;
+                  }
+
+                  _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} SendEventAsync failure", payload.Id, packet.TerminalId);
+
+                  return payload;
+               }
+               catch (Exception ex)
+               {
+                  _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} SendEventAsync failure", payload.Id, packet.TerminalId);
+
+                  return payload;
                }
             }
          }
+
+         // Proccessing successful, message can be deleted by QueueTrigger plumbing
+         return null;
       }
    }
 }
