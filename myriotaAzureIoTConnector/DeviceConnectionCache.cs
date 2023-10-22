@@ -91,17 +91,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             moduleType = _azureIoTSettings.ModuleType;
          }
 
-         if (!item.Attributes.TryGetValue("DtdlModelId", out string dtdlModelId))
+         if (!item.Attributes.TryGetValue("DtdlModelId", out string? dtdlModelId))
          {
             dtdlModelId = _azureIoTSettings.DtdlModelId;
          }
 
-         if (!item.Attributes.TryGetValue("PayloadFormatterUplink", out string? payloadFormatterUplink))
+         if (!item.Attributes.TryGetValue("UplinkDefault", out string? payloadFormatterUplink))
          {
             payloadFormatterUplink = _payloadformatterSettings.UplinkFormatterDefault;
          }
 
-         if (!item.Attributes.TryGetValue("payloadFormatterDownlink", out string? payloadFormatterDownlink))
+         if (!item.Attributes.TryGetValue("DownlinkDefault", out string? payloadFormatterDownlink))
          {
             payloadFormatterDownlink = _payloadformatterSettings.DownlinkFormatterDefault;
          }
