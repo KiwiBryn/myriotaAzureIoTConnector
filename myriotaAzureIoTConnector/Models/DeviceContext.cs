@@ -1,4 +1,5 @@
-﻿// Copyright (c) August 2023, devMobile Software
+﻿//---------------------------------------------------------------------------------
+// Copyright (c) October 2023, devMobile Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,14 +14,24 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
+using System.Collections.Generic;
+
+using Microsoft.Azure.Devices.Client;
+
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
-    public class PayloadformatterSettings
-    {
-        public string UplinkContainer { get; set; } = string.Empty;
-        public string UplinkFormatterDefault { get; set; } = string.Empty;
+   public class DeviceConnectionContext
+   {
+      public string TerminalId { get; set; } = string.Empty;
 
-        public string DownlinkContainer { get; set; } = string.Empty;
-        public string DownlinkFormatterDefault { get; set; } = string.Empty;
-    }
+      public string ModuleType { get; set; } = string.Empty;
+
+      public string PayloadFormatterUplink { get; set; } = string.Empty;
+
+      public string PayloadFormatterDownlink { get; set; } = string.Empty;
+
+      public Dictionary<string, string> Attibutes { get; set; }
+
+      public DeviceClient DeviceClient { get; set; }
+   }
 }

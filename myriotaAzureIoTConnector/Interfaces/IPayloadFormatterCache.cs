@@ -1,4 +1,4 @@
-﻿// Copyright (c) August 2023, devMobile Software
+﻿// Copyright (c) October 2023, devMobile Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,14 +13,18 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
-namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
+namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    public class PayloadformatterSettings
-    {
-        public string UplinkContainer { get; set; } = string.Empty;
-        public string UplinkFormatterDefault { get; set; } = string.Empty;
+   using System.Threading;
+   using System.Threading.Tasks;
 
-        public string DownlinkContainer { get; set; } = string.Empty;
-        public string DownlinkFormatterDefault { get; set; } = string.Empty;
-    }
+   using PayloadFormatter;
+
+
+   public interface IPayloadFormatterCache
+   {
+      public Task<IFormatterUplink> UplinkGetAsync(string payloadFormatter, CancellationToken cancellationToken);
+
+      public Task<IFormatterDownlink> DownlinkGetAsync(string payloadFormatter, CancellationToken cancellationToken = default(CancellationToken));
+   }
 }

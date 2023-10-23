@@ -15,79 +15,69 @@
 //---------------------------------------------------------------------------------
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    using System.Threading;
-    using System.Threading.Tasks;
+   using System.Threading;
+   using System.Threading.Tasks;
 
-    using Azure.Storage.Blobs;
-    using Azure.Storage.Blobs.Models;
-    using Microsoft.Extensions.Caching.Memory;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Options;
+   using Azure.Storage.Blobs;
+   using Azure.Storage.Blobs.Models;
+   using Microsoft.Extensions.Caching.Memory;
+   using Microsoft.Extensions.Options;
 
-    using CSScriptLib;
-    using LazyCache;
+   using CSScriptLib;
+   using LazyCache;
 
-    using PayloadFormatter;
-
-
-    public interface IPayloadFormatterCache
-    {
-        public Task<IFormatterUplink> UplinkGetAsync(CancellationToken cancellationToken);
-
-        public Task<IFormatterDownlink> DownlinkGetAsync(CancellationToken cancellationToken = default(CancellationToken));
-    }
-
-    public class PayloadFormatterCache : IPayloadFormatterCache
-    {
-        private readonly ILogger<PayloadFormatterCache> _logger;
-        private readonly Models.PayloadformatterSettings _payloadformatterSettings;
-        private readonly BlobServiceClient _blobServiceClient;
-
-        private readonly static IAppCache _payloadFormatters = new CachingService();
+   using PayloadFormatter;
 
 
-        public PayloadFormatterCache(ILogger<PayloadFormatterCache>logger, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, BlobServiceClient blobServiceClient)
-        {
-            _logger = logger;
-            _payloadformatterSettings = payloadformatterSettings.Value;
-            _blobServiceClient = blobServiceClient;
-        }
+   public class PayloadFormatterCache : IPayloadFormatterCache
+   {
+      private readonly Models.PayloadformatterSettings _payloadformatterSettings;
+      private readonly BlobServiceClient _blobServiceClient;
 
-        public async Task<IFormatterUplink> UplinkGetAsync(CancellationToken cancellationToken)
-        {
-            IFormatterUplink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync($"U{_payloadformatterSettings.PayloadFormatterUplinkDefault}", (ICacheEntry x) => UplinkLoadAsync(cancellationToken), memoryCacheEntryOptions);
+      private readonly static IAppCache _payloadFormatters = new CachingService();
 
-            return payloadFormatterUplink;
-        }
 
-        private async Task<IFormatterUplink> UplinkLoadAsync(CancellationToken cancellationToken)
-        {
-            BlobClient blobClient = _blobServiceClient.GetBlobContainerClient(_payloadformatterSettings.PayloadFormattersUplinkContainer).GetBlobClient(_payloadformatterSettings.PayloadFormatterUplinkDefault);
+      public PayloadFormatterCache(IOptions<Models.PayloadformatterSettings> payloadformatterSettings, BlobServiceClient blobServiceClient)
+      {
+         _payloadformatterSettings = payloadformatterSettings.Value;
+         _blobServiceClient = blobServiceClient;
+      }
 
-            BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
+      public async Task<IFormatterUplink> UplinkGetAsync(string payloadFormatter, CancellationToken cancellationToken)
+      {
+         IFormatterUplink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync($"U{payloadFormatter}", (ICacheEntry x) => UplinkLoadAsync(payloadFormatter, cancellationToken), memoryCacheEntryOptions);
 
-            return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterUplink>(downloadResult.Content.ToString());
-        }
+         return payloadFormatterUplink;
+      }
 
-        public async Task<IFormatterDownlink> DownlinkGetAsync(CancellationToken cancellationToken)
-        {
-            IFormatterDownlink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync($"D{_payloadformatterSettings.PayloadFormatterDownlinkdefault}", (ICacheEntry x) => DownlinkLoadAsync( cancellationToken), memoryCacheEntryOptions);
+      private async Task<IFormatterUplink> UplinkLoadAsync(string payloadFormatter, CancellationToken cancellationToken)
+      {
+         BlobClient blobClient = _blobServiceClient.GetBlobContainerClient(_payloadformatterSettings.UplinkContainer).GetBlobClient(payloadFormatter);
 
-            return payloadFormatterUplink;
-        }
+         BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
 
-        private async Task<IFormatterDownlink> DownlinkLoadAsync(CancellationToken cancellationToken)
-        {
-            BlobClient blobClient = _blobServiceClient.GetBlobContainerClient(_payloadformatterSettings.PayloadFormattersDownlinkContainer).GetBlobClient(_payloadformatterSettings.PayloadFormatterDownlinkdefault);
+         return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterUplink>(downloadResult.Content.ToString());
+      }
 
-            BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
+      public async Task<IFormatterDownlink> DownlinkGetAsync(string payloadFormatter, CancellationToken cancellationToken)
+      {
+         IFormatterDownlink payloadFormatterUplink = await _payloadFormatters.GetOrAddAsync($"D{payloadFormatter}", (ICacheEntry x) => DownlinkLoadAsync(payloadFormatter, cancellationToken), memoryCacheEntryOptions);
 
-            return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterDownlink>(downloadResult.Content.ToString());
-        }
+         return payloadFormatterUplink;
+      }
 
-        private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
-        {
-            Priority = CacheItemPriority.NeverRemove
-        };
-    }
+      private async Task<IFormatterDownlink> DownlinkLoadAsync(string payloadFormatter, CancellationToken cancellationToken)
+      {
+         BlobClient blobClient = _blobServiceClient.GetBlobContainerClient(_payloadformatterSettings.DownlinkContainer).GetBlobClient(payloadFormatter);
+
+         BlobDownloadResult downloadResult = await blobClient.DownloadContentAsync(cancellationToken);
+
+         return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterDownlink>(downloadResult.Content.ToString());
+      }
+
+      private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
+      {
+         Priority = CacheItemPriority.NeverRemove
+      };
+   }
 }
