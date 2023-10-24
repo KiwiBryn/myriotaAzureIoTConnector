@@ -22,38 +22,55 @@ using Newtonsoft.Json.Converters;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
-    public class AzureIoT
-    {
-        public AzureIotHub AzureIoTHub { get; set; }
+   public enum ApplicationType
+   {
+      Undefined = 0,
+      IoTHub,
+      IoTCentral
+   }
 
-        public string DtdlModelId { get; set; } = string.Empty;
+   public class AzureIoT
+   {
+      [JsonConverter(typeof(StringEnumConverter))]
+      public ApplicationType ApplicationType { get; set; }
 
-        public string ModuleType { get; set; } = string.Empty;
-    }
+      public AzureIotHub AzureIoTHub { get; set; }
 
-    public class AzureIotHub
-    {
-        [JsonConverter(typeof(StringEnumConverter))]
-        public AzureIotHubConnectionType ConnectionType { get; set; }
+      public AzureIoTCentral AzureIoTCentral { get; set; }
 
-        public string ConnectionString { get; set; } = string.Empty;
+      public string DtdlModelId { get; set; } = string.Empty;
 
-        public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
-    }
+      public string ModuleType { get; set; } = string.Empty;
+   }
 
-    public enum AzureIotHubConnectionType
-    {
-        Undefined = 0,
-        DeviceConnectionString,
-        DeviceProvisioningService
-    }
+   public class AzureIotHub
+   {
+      [JsonConverter(typeof(StringEnumConverter))]
+      public AzureIotHubConnectionType ConnectionType { get; set; }
 
-    public class AzureDeviceProvisioningService
-    {
-        public string GlobalDeviceEndpoint { get; set; } = string.Empty;
+      public string ConnectionString { get; set; } = string.Empty;
 
-        public string IdScope { get; set; } = string.Empty;
+      public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
+   }
 
-        public string GroupEnrollmentKey { get; set; } = string.Empty;
-    }
+   public class AzureIoTCentral
+   {
+      public Dictionary<string, string> Payload { get; set; }
+   }
+
+   public enum AzureIotHubConnectionType
+   {
+      Undefined = 0,
+      DeviceConnectionString,
+      DeviceProvisioningService
+   }
+
+   public class AzureDeviceProvisioningService
+   {
+      public string GlobalDeviceEndpoint { get; set; } = string.Empty;
+
+      public string IdScope { get; set; } = string.Empty;
+
+      public string GroupEnrollmentKey { get; set; } = string.Empty;
+   }
 }
