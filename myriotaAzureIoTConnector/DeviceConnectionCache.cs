@@ -75,7 +75,19 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          await context.DeviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, context, cancellationToken);
 
-         await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
+         switch (_azureIoTSettings.ApplicationType)
+         {
+            case Models.ApplicationType.IoTHub:
+               await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
+               break;
+            case Models.ApplicationType.IoTCentral:
+               await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTCentralMessageHandler, context, cancellationToken);
+               break;
+            default:
+               _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
+
+               throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
+         }
 
          await context.DeviceClient.OpenAsync(cancellationToken);
 
@@ -85,11 +97,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       private async Task<Models.DeviceConnectionContext> DeviceConnectionStringConnectAsync(string terminalId, CancellationToken cancellationToken)
       {
          Models.Item item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
-
-         if (!item.Attributes.TryGetValue("DeviceType", out string? moduleType))
-         {
-            moduleType = _azureIoTSettings.ModuleType;
-         }
 
          if (!item.Attributes.TryGetValue("DtdlModelId", out string? dtdlModelId))
          {
