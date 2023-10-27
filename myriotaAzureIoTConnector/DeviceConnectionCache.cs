@@ -59,35 +59,37 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       {
          Models.DeviceConnectionContext context;
 
-         switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
-         {
-            case Models.AzureIotHubConnectionType.DeviceConnectionString:
-               context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, cancellationToken), memoryCacheEntryOptions);
-               break;
-            case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-               context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, cancellationToken), memoryCacheEntryOptions);
-               break;
-            default:
-               _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
-
-               throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
-         }
-
-         await context.DeviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, context, cancellationToken);
-
          switch (_azureIoTSettings.ApplicationType)
          {
             case Models.ApplicationType.IoTHub:
+               switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
+               {
+                  case Models.AzureIotHubConnectionType.DeviceConnectionString:
+                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, cancellationToken), memoryCacheEntryOptions);
+                     break;
+                  case Models.AzureIotHubConnectionType.DeviceProvisioningService:
+                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.AzureIoTHub.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
+                     break;
+                  default:
+                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
+
+                     throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
+               }
+
                await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
                break;
             case Models.ApplicationType.IoTCentral:
+               context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.AzureIoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
+
                await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTCentralMessageHandler, context, cancellationToken);
                break;
             default:
-               _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
+               _logger.LogError("Uplink- Azure IoT ApplicationType unknown {0}", _azureIoTSettings.ApplicationType);
 
-               throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
+               throw new NotImplementedException("AzureIoT Hub unsupported ApplicationType");
          }
+
+         await context.DeviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, context, cancellationToken);
 
          await context.DeviceClient.OpenAsync(cancellationToken);
 
@@ -126,7 +128,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          return new Models.DeviceConnectionContext()
          {
             TerminalId = terminalId,
-            ModuleType = moduleType,
             PayloadFormatterUplink = payloadFormatterUplink,
             PayloadFormatterDownlink = payloadFormatterDownlink,
             Attibutes = new Dictionary<string, string>(item.Attributes),
@@ -135,14 +136,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          };
       }
 
-      private async Task<Models.DeviceConnectionContext> DeviceProvisioningServiceConnectAsync(string terminalId, CancellationToken cancellationToken)
+      private async Task<Models.DeviceConnectionContext> DeviceProvisioningServiceConnectAsync(string terminalId, Models.AzureDeviceProvisioningService deviceProvisioningService, CancellationToken cancellationToken)
       {
          Models.Item item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
-
-         if (!item.Attributes.TryGetValue("DeviceType", out string? moduleType))
-         {
-            moduleType = _azureIoTSettings.ModuleType;
-         }
 
          if (!item.Attributes.TryGetValue("DtdlModelId", out string? dtdlModelId))
          {
@@ -161,7 +157,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          string deviceKey;
 
-         using (var hmac = new HMACSHA256(Convert.FromBase64String(_azureIoTSettings.AzureIoTHub.DeviceProvisioningService.GroupEnrollmentKey)))
+         using (var hmac = new HMACSHA256(Convert.FromBase64String(deviceProvisioningService.GroupEnrollmentKey)))
          {
             deviceKey = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(terminalId)));
          }
@@ -173,8 +169,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                DeviceRegistrationResult result;
 
                ProvisioningDeviceClient provClient = ProvisioningDeviceClient.Create(
-                   _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.GlobalDeviceEndpoint,
-                   _azureIoTSettings.AzureIoTHub.DeviceProvisioningService.IdScope,
+                   deviceProvisioningService.GlobalDeviceEndpoint,
+                   deviceProvisioningService.IdScope,
                    securityProvider,
                transport);
 
@@ -204,7 +200,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                return new Models.DeviceConnectionContext()
                {
                   TerminalId = terminalId,
-                  ModuleType = moduleType,
                   PayloadFormatterUplink = payloadFormatterUplink,
                   PayloadFormatterDownlink = payloadFormatterDownlink,
                   Attibutes = new Dictionary<string, string>(item.Attributes),

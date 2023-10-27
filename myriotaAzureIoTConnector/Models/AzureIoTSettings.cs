@@ -39,8 +39,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
       public AzureIoTCentral AzureIoTCentral { get; set; }
 
       public string DtdlModelId { get; set; } = string.Empty;
+   }
 
-      public string ModuleType { get; set; } = string.Empty;
+   public enum AzureIotHubConnectionType
+   {
+      Undefined = 0,
+      DeviceConnectionString,
+      DeviceProvisioningService
    }
 
    public class AzureIotHub
@@ -56,13 +61,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
    public class AzureIoTCentral
    {
       public Dictionary<string, string> Payload { get; set; }
-   }
 
-   public enum AzureIotHubConnectionType
-   {
-      Undefined = 0,
-      DeviceConnectionString,
-      DeviceProvisioningService
+      public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
    }
 
    public class AzureDeviceProvisioningService
