@@ -32,7 +32,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
    {
       public async Task AzureIoTCentralMessageHandler(Message message, object userContext)
       {
-         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
+         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;  
 
          _logger.LogInformation("Downlink-IoT Central TerminalID:{TerminalId} LockToken:{LockToken}", context.TerminalId, message.LockToken);
 
@@ -51,7 +51,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
 
                // Look up the method settings to get UserApplicationId and optional downlink message payload JSON.
-               if ((_azureIoTSettings.AzureIoTCentral.Payload == null) || !_azureIoTSettings.AzureIoTCentral.Payload.TryGetValue(methodName, out String payload))
+               if ((_azureIoTSettings.IoTCentral.Methods == null) || !_azureIoTSettings.IoTCentral.Methods.TryGetValue(methodName, out Models.AzureIoTCentralMethod method))
                {
                   _logger.LogWarning("Downlink-TerminalID:{TerminalId} LockToken:{LockToken} method-name:{methodName} has no payload", context.TerminalId, message.LockToken, methodName);
 
@@ -60,6 +60,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                   return;
                }
 
+               // Use default formatter and replace with method formatter if configured.
+               string payloadFormatter = context.PayloadFormatterDownlink;
+
+               if (!string.IsNullOrEmpty(method.PayloadFormatter))
+               {
+                  payloadFormatter = context.PayloadFormatterDownlink;
+               }
+
+               // Get the message payload try converting it to text then to JSON
                byte[] payloadBytes = message.GetBytes();
 
                string payloadText = string.Empty;
@@ -78,13 +87,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // Check to see if special case for Azure IoT central command with no request payload
                if (payloadText.IsPayloadEmpty())
                {
-                  if (payload.IsPayloadValidJson())
+                  if (method.Payload.IsPayloadValidJson())
                   {
-                     payloadJson = JObject.Parse(payload);
+                     payloadJson = JObject.Parse(method.Payload);
                   }
                   else
                   {
-                     _logger.LogWarning("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} method-name:{methodName} IsPayloadValidJson:{Payload} failed", context.TerminalId, message.LockToken, methodName, payload);
+                     _logger.LogWarning("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} method-name:{methodName} IsPayloadValidJson:{Payload} failed", context.TerminalId, message.LockToken, methodName, method.Payload);
 
                      await context.DeviceClient.RejectAsync(message);
 
@@ -117,7 +126,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                try
                {
-                  payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(context.PayloadFormatterDownlink);
+                  payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatter);
                }
                catch (CSScriptLib.CompilerException cex)
                {
@@ -161,7 +170,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             _logger.LogError(ex, "Downlink-TerminalID:{DeviceId} LockToken:{TerminalId} MessageHandler processing failed", context.TerminalId, message.LockToken);
 
-            throw;
+            await context.DeviceClient.RejectAsync(message);
          }
       }
    }

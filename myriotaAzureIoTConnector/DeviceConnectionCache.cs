@@ -62,16 +62,16 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          switch (_azureIoTSettings.ApplicationType)
          {
             case Models.ApplicationType.IoTHub:
-               switch (_azureIoTSettings.AzureIoTHub.ConnectionType)
+               switch (_azureIoTSettings.IoTHub.ConnectionType)
                {
                   case Models.AzureIotHubConnectionType.DeviceConnectionString:
                      context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, cancellationToken), memoryCacheEntryOptions);
                      break;
                   case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.AzureIoTHub.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
+                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.IoTHub.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
                      break;
                   default:
-                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.AzureIoTHub.ConnectionType);
+                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.IoTHub.ConnectionType);
 
                      throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
                }
@@ -79,7 +79,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
                break;
             case Models.ApplicationType.IoTCentral:
-               context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.AzureIoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
+               context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
 
                await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTCentralMessageHandler, context, cancellationToken);
                break;
@@ -132,7 +132,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             PayloadFormatterDownlink = payloadFormatterDownlink,
             Attibutes = new Dictionary<string, string>(item.Attributes),
 
-            DeviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.AzureIoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions),
+            DeviceClient = DeviceClient.CreateFromConnectionString(_azureIoTSettings.IoTHub.ConnectionString, terminalId, Constants.TransportSettings, clientOptions),
          };
       }
 

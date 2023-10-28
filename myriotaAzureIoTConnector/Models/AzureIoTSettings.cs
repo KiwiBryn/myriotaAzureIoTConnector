@@ -34,9 +34,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
       [JsonConverter(typeof(StringEnumConverter))]
       public ApplicationType ApplicationType { get; set; }
 
-      public AzureIotHub AzureIoTHub { get; set; }
+      public AzureIotHub IoTHub { get; set; }
 
-      public AzureIoTCentral AzureIoTCentral { get; set; }
+      public AzureIoTCentral IoTCentral { get; set; }
 
       public string DtdlModelId { get; set; } = string.Empty;
    }
@@ -60,9 +60,16 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 
    public class AzureIoTCentral
    {
-      public Dictionary<string, string> Payload { get; set; }
-
       public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
+
+      public Dictionary<string, AzureIoTCentralMethod> Methods { get; set; }
+   }
+
+   public class AzureIoTCentralMethod
+   {
+      public string PayloadFormatter { get; set; } = string.Empty;
+
+      public string Payload { get; set; } = string.Empty;
    }
 
    public class AzureDeviceProvisioningService
