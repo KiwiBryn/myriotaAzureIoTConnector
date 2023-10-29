@@ -13,6 +13,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PayloadFormatters", "Payloa
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Uplink", "Uplink", "{13AC98F2-3FE2-47A4-99C4-DD74D03CF71D}"
 	ProjectSection(SolutionItems) = preProject
+		PayloadFormatters\Uplink\BrokenBrokenCode.cs = PayloadFormatters\Uplink\BrokenBrokenCode.cs
+		PayloadFormatters\Uplink\BrokenEmpty.cs = PayloadFormatters\Uplink\BrokenEmpty.cs
+		PayloadFormatters\Uplink\BrokenInterface.cs = PayloadFormatters\Uplink\BrokenInterface.cs
+		PayloadFormatters\Uplink\BrokenMissingInterface.cs = PayloadFormatters\Uplink\BrokenMissingInterface.cs
+		PayloadFormatters\Uplink\BrokenPropertiesDuplicate.cs = PayloadFormatters\Uplink\BrokenPropertiesDuplicate.cs
+		PayloadFormatters\Uplink\BrokenPropertiesNull.cs = PayloadFormatters\Uplink\BrokenPropertiesNull.cs
+		PayloadFormatters\Uplink\BrokenReturns.cs = PayloadFormatters\Uplink\BrokenReturns.cs
+		PayloadFormatters\Uplink\BrokenReturnsNull.cs = PayloadFormatters\Uplink\BrokenReturnsNull.cs
+		PayloadFormatters\Uplink\BrokenReturnsTooLong.cs = PayloadFormatters\Uplink\BrokenReturnsTooLong.cs
+		PayloadFormatters\Uplink\BrokenReturnsTooShort.cs = PayloadFormatters\Uplink\BrokenReturnsTooShort.cs
+		PayloadFormatters\Uplink\BrokenUsingMissing.cs = PayloadFormatters\Uplink\BrokenUsingMissing.cs
 		PayloadFormatters\Uplink\default.cs = PayloadFormatters\Uplink\default.cs
 		PayloadFormatters\Uplink\tracker.cs = PayloadFormatters\Uplink\tracker.cs
 	EndProjectSection
@@ -26,7 +37,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UplinkPayloadFormatterTestH
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PayloadFormatterTestHarnesses", "PayloadFormatterTestHarnesses", "{BC070055-C878-4E47-B220-757630C623BA}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DownlinkPayloadFormatterTestHarness", "DownlinkPayloadFormatterTestHarness\DownlinkPayloadFormatterTestHarness.csproj", "{EFC15B9F-461D-49EA-8DB0-E898DC99067E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DownlinkPayloadFormatterTestHarness", "DownlinkPayloadFormatterTestHarness\DownlinkPayloadFormatterTestHarness.csproj", "{EFC15B9F-461D-49EA-8DB0-E898DC99067E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
