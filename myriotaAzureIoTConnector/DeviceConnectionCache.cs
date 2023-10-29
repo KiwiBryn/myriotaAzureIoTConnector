@@ -152,7 +152,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          if (!item.Attributes.TryGetValue("payloadFormatterDownlink", out string? payloadFormatterDownlink))
          {
-            payloadFormatterDownlink = _payloadformatterSettings.UplinkFormatterDefault;
+            payloadFormatterDownlink = _payloadformatterSettings.DownlinkFormatterDefault;
          }
 
          string deviceKey;
