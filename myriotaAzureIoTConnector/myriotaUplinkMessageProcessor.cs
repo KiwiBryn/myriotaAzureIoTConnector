@@ -85,21 +85,33 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
 
             // Get the payload formatter from Azure Storage container, compile, and then cache binary.
-            IFormatterUplink payloadFormatterUplink;
+            IFormatterUplink formatterUplink;
 
             try
             {
-               payloadFormatterUplink = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
+               formatterUplink = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
+            }
+            catch (Azure.RequestFailedException aex)
+            {
+               _logger.LogError(aex, "Uplink- PayloadID:{0} payload formatter load failed", payload.Id);
+
+               return payload;
+            }
+            catch (NullReferenceException nex)
+            {
+               _logger.LogError(nex, "Uplink- PayloadID:{id} formatter:{formatter} compilation failed missing interface", payload.Id, context.PayloadFormatterUplink);
+
+               return payload;
             }
             catch (CSScriptLib.CompilerException cex)
             {
-               _logger.LogError(cex, "Uplink- PayloadID:{0} payload formatter compilation failed", payload.Id);
+               _logger.LogError(cex, "Uplink- PayloadID:{id} formatter:{formatter} compiler failed", payload.Id, context.PayloadFormatterUplink);
 
                return payload;
             }
             catch (Exception ex)
             {
-               _logger.LogError(ex, "Uplink- PayloadID:{0} payload formatter load failed", payload.Id);
+               _logger.LogError(ex, "Uplink- PayloadID:{id} formatter:{formatter} compilation failed", payload.Id, context.PayloadFormatterUplink);
 
                return payload;
             }
@@ -124,7 +136,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             try
             {
-               telemetryEvent = payloadFormatterUplink.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
+               telemetryEvent = formatterUplink.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
             }
             catch (Exception ex)
             {
