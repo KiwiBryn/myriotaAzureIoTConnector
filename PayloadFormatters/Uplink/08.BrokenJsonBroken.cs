@@ -11,6 +11,7 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
         JObject telemetryEvent = new JObject();
 
         telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
+        telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
 
         return telemetryEvent;
     }

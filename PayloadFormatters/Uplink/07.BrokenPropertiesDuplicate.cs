@@ -10,6 +10,9 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
     {
         JObject telemetryEvent = new JObject();
 
+	properties.Add("PayloadId", "Id");
+	properties.Add("PayloadId", "Id");
+
         telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
 
         return telemetryEvent;
