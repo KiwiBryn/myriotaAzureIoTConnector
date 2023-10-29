@@ -1,9 +1,0 @@
-{
-  "profiles": {
-    "myriotaAzureIoTConnector": {
-      "commandName": "Project",
-      "commandLineArgs": "--port 7066",
-      "launchBrowser": false
-    }
-  }
-}

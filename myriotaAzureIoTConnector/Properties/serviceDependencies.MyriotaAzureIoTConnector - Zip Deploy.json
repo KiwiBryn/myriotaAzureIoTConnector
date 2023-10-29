@@ -1,16 +1,16 @@
 {
   "dependencies": {
-    "appInsights1": {
-      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/microsoft.insights/components/myriotaConnectorLogging",
-      "type": "appInsights.azure",
-      "connectionId": "APPLICATIONINSIGHTS_CONNECTION_STRING"
-    },
-    "storage2": {
-      "serviceConnectorResourceId": "/subscriptions/[parameters('subscriptionId')]/resourcegroups/[parameters('resourceGroupName')]/providers/Microsoft.Web/sites/MyriotaAzureIoTConnector/providers/Microsoft.ServiceLinker/linkers/AzureWebJobsStorage_28E03F962F, /subscriptions/3435ed8e-5ac4-4dca-90b6-276fa66a6114/resourcegroups/myriotaAzureIoTConnector/providers/Microsoft.Web/sites/MyriotaAzureIoTConnector/providers/Microsoft.ServiceLinker/linkers/AzureWebJobsStorage_93DA9DE943",
-      "secretStore": null,
+    "storage1": {
       "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/Microsoft.Storage/storageAccounts/myriotaconnector",
       "type": "storage.azure",
       "connectionId": "AzureWebJobsStorage"
+    },
+    "appInsights1": {
+      "secretStore": null,
+      "resourceId": "/subscriptions/[parameters('subscriptionId')]/resourceGroups/[parameters('resourceGroupName')]/providers/microsoft.insights/components/myriotaConnectorLogging",
+      "type": "appInsights.azure",
+      "connectionId": "APPLICATIONINSIGHTS_CONNECTION_STRING",
+      "dynamicId": null
     }
   }
 }
