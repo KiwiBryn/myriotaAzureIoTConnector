@@ -20,6 +20,8 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Downlink", "Downlink", "{E7567147-28F2-4F60-B71F-AE127BFB246A}"
 	ProjectSection(SolutionItems) = preProject
 		PayloadFormatters\Downlink\default.cs = PayloadFormatters\Downlink\default.cs
+		PayloadFormatters\Downlink\FanStatus.cs = PayloadFormatters\Downlink\FanStatus.cs
+		PayloadFormatters\Downlink\LightsOffOn.cs = PayloadFormatters\Downlink\LightsOffOn.cs
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UplinkPayloadFormatterTestHarness", "UplinkPayloadFormatterTestHarness\UplinkPayloadFormatterTestHarness.csproj", "{2E5CCA3E-FF39-4D38-B72D-E7D69ADB7F70}"
