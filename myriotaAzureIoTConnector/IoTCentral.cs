@@ -63,9 +63,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // Use default formatter and replace with method formatter if configured.
                string payloadFormatter = context.PayloadFormatterDownlink;
 
-               if (!string.IsNullOrEmpty(method.PayloadFormatter))
+               if (!string.IsNullOrEmpty(method.Formatter))
                {
-                  payloadFormatter = context.PayloadFormatterDownlink;
+                  payloadFormatter = method.Formatter;
                }
 
                // Get the message payload try converting it to text then to JSON
