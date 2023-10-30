@@ -67,7 +67,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 
    public class AzureIoTCentralMethod
    {
-      public string PayloadFormatter { get; set; } = string.Empty;
+      public string Formatter { get; set; } = string.Empty;
 
       public string Payload { get; set; } = string.Empty;
    }
