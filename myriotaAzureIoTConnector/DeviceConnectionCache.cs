@@ -190,9 +190,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                {
-                  _logger.LogWarning("Uplink-DeviceID:{0} RegisterAsync status:{1} failed ", terminalId, result.Status);
+                  _logger.LogWarning("Uplink-TerminalID:{0} RegisterAsync status:{1} failed ", terminalId, result.Status);
 
-                  throw new ApplicationException($"Uplink-DeviceID:{0} RegisterAsync status:{1} failed");
+                  throw new ApplicationException($"Uplink-TerminalId:{terminalId} RegisterAsync status:{result.Status} failed");
                }
 
                IAuthenticationMethod authentication = new DeviceAuthenticationWithRegistrySymmetricKey(result.DeviceId, (securityProvider as SecurityProviderSymmetricKey).GetPrimaryKey());
@@ -224,7 +224,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       {
          Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
 
-         _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", context.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
+         _logger.LogWarning("Downlink-TerminalID:{TerminalId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", context.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
 
          return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
       }

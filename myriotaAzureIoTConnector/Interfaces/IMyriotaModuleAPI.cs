@@ -22,7 +22,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
    public interface IMyriotaModuleAPI
    {
-      public Task<Models.Item> GetAsync(string TerminalId, CancellationToken cancellationToken);
+      public Task<Models.Item> GetAsync(string terminalId, CancellationToken cancellationToken);
 
       public Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken);
 

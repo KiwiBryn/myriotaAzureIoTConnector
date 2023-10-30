@@ -38,7 +38,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          _myiotaSettings = myiotaSettings.Value;
       }
 
-      public async Task<Models.Item> GetAsync(string TerminalId, CancellationToken cancellationToken)
+      public async Task<Models.Item> GetAsync(string terminalId, CancellationToken cancellationToken)
       {
          RestClientOptions restClientOptions = new RestClientOptions()
          {
@@ -48,7 +48,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          using (RestClient client = new RestClient(restClientOptions))
          {
-            RestRequest request = new RestRequest($"v1/modules/{TerminalId}?Destinations=false");
+            RestRequest request = new RestRequest($"v1/modules/{terminalId}?Destinations=false");
 
             request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
