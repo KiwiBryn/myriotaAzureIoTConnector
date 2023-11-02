@@ -15,6 +15,6 @@ public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
          return new byte[] { };
       }
 
-      return new byte[] { Convert.ToByte(light.Value) };
+      return new byte[] { 0, Convert.ToByte(light.Value) };
    }
 }
