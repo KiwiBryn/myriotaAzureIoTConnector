@@ -18,10 +18,10 @@ using Microsoft.Azure.Devices.Client;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    internal static class Constants
-    {
-        public static readonly ITransportSettings[] TransportSettings = new ITransportSettings[]
-        {
+   internal static class Constants
+   {
+      public static readonly ITransportSettings[] TransportSettings = new ITransportSettings[]
+      {
             new AmqpTransportSettings(TransportType.Amqp_Tcp_Only)
             {
                 AmqpConnectionPoolSettings = new AmqpConnectionPoolSettings()
@@ -29,9 +29,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                     Pooling = true,
                 }
              }
-        };
+      };
 
-        public const int DownlinkPayloadMinimumLength = 1;
-        public const int DownlinkPayloadMaximumLength = 20;
-    }
+      public const int DownlinkPayloadMinimumLength = 1;
+      public const int DownlinkPayloadMaximumLength = 20;
+
+      public const string IoTHubDownlinkPayloadFormatterProperty = "PayloadFormatter";
+   }
 }
