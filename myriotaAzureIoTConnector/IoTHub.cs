@@ -107,8 +107,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} MessageID:{messageId} sent", context.TerminalId, message.LockToken, messageId);
 
             await context.DeviceClient.CompleteAsync(message);
-
-            _logger.LogInformation("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} MessageID:{messageId} sent", context.TerminalId, message.LockToken, messageId);
          }
          catch (Exception ex)
          {
