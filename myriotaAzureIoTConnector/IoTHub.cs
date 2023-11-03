@@ -49,8 +49,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          try
          {
-            IFormatterDownlink payloadFormatterDownlink = payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatter);
-
             // If this fails payload broken
             byte[] messageBytes = message.GetBytes();
 
@@ -75,6 +73,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} messageText:{2} not valid json", context.TerminalId, message.LockToken, BitConverter.ToString(messageBytes));
             }
+
+            // This can fail for losts of diffent reasons, invalid path to blob, 
+            IFormatterDownlink payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatter);
 
             byte[] payloadBytes = payloadFormatterDownlink.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
 
