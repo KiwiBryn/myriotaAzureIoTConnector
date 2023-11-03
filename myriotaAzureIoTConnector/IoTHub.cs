@@ -74,11 +74,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} messageText:{2} not valid json", context.TerminalId, message.LockToken, BitConverter.ToString(messageBytes));
             }
 
-            // This can fail for losts of diffent reasons, invalid path to blob, 
+            // This can fail for lots of diffent reasons, invalid path to blob, syntax error, interface broken etc.
             IFormatterDownlink payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatter);
 
+            // This can fail for lots of different reasons, null references, divide by zero, out of range etc.
             byte[] payloadBytes = payloadFormatterDownlink.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
 
+            // This can fail for a few reasons mainly connectivity & message queuing etc.
             string messageId = await _myriotaModuleAPI.SendAsync(context.TerminalId, payloadBytes);
 
             await context.DeviceClient.CompleteAsync(message);
