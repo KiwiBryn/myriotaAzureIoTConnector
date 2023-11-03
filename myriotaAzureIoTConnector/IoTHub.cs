@@ -37,15 +37,37 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          _logger.LogInformation("Downlink- IoT Hub TerminalId:{termimalId} LockToken:{LockToken}", context.TerminalId, message.LockToken);
 
+         // Use default formatter and replace with message specific formatter if configured.
+         if (!message.Properties.TryGetValue(Constants.IoTHubDownlinkPayloadFormatterProperty, out string payloadFormatter) || string.IsNullOrEmpty(payloadFormatter))
+         {
+            payloadFormatter = context.PayloadFormatterDownlink;
+         }
+
+         _logger.LogInformation("Downlink- IoT Hub TerminalID:{termimalId} LockToken:{LockToken} Payload formatter:{payloadFormatter} ", context.TerminalId, message.LockToken, payloadFormatter);
+
          try
          {
+            IFormatterDownlink payloadFormatterDownlink = payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatter);
 
+            byte[] messageBytes = message.GetBytes();
+
+            string messageText = Encoding.UTF8.GetString(messageBytes);
+
+            JObject messageJson = JObject.Parse(messageText);
+
+            byte[] payloadBytes = payloadFormatterDownlink.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
+
+            string messageId = await _myriotaModuleAPI.SendAsync(context.TerminalId, payloadBytes);
+
+            await context.DeviceClient.CompleteAsync(message);
+
+            _logger.LogInformation("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} MessageID:{messageId} sent", context.TerminalId, message.LockToken, messageId);
          }
          catch (Exception ex)
          {
             await context.DeviceClient.RejectAsync(message);
 
-            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} failed", context.TerminalId, message.LockToken );
+            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} failed", context.TerminalId, message.LockToken);
          }
       }
    }
