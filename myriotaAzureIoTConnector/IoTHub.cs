@@ -51,11 +51,30 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             IFormatterDownlink payloadFormatterDownlink = payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatter);
 
+            // If this fails payload broken
             byte[] messageBytes = message.GetBytes();
 
-            string messageText = Encoding.UTF8.GetString(messageBytes);
+            // This will fail for some messages, payload formatter gets bytes only
+            string messageText = string.Empty;
+            try
+            {
+               messageText = Encoding.UTF8.GetString(messageBytes);
+            }
+            catch (ArgumentException aex)
+            {
+               _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} messageBytes:{2} not valid Text", context.TerminalId, message.LockToken, BitConverter.ToString(messageBytes));
+            }
 
-            JObject messageJson = JObject.Parse(messageText);
+            // This will fail for some messages, payload formatter gets bytes only
+            JObject? messageJson = null;
+            try
+            {
+               messageJson = JObject.Parse(messageText);
+            }
+            catch ( JsonReaderException jex)
+            {
+               _logger.LogInformation("Downlink-DeviceID:{DeviceId} LockToken:{LockToken} messageText:{2} not valid json", context.TerminalId, message.LockToken, BitConverter.ToString(messageBytes));
+            }
 
             byte[] payloadBytes = payloadFormatterDownlink.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
 
