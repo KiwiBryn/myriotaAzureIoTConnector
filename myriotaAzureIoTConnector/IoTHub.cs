@@ -75,10 +75,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
 
             // This shouldn't fail, but it could for lots of diffent reasons, invalid path to blob, syntax error, interface broken etc.
-            IFormatterDownlink payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
+            IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
 
             // This shouldn't fail, but it could for lots of different reasons, null references, divide by zero, out of range etc.
-            byte[] payloadBytes = payloadFormatterDownlink.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
+            byte[] payloadBytes = payloadFormatter.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
 
             // Validate payload before calling Myriota control message send API method
             if (payloadBytes is null)
