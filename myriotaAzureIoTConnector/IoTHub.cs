@@ -33,18 +33,19 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
    {
       public async Task AzureIoTHubMessageHandler(Message message, object userContext)
       {
+         string lockToken = message.LockToken;
          Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
 
-         _logger.LogInformation("Downlink- IoT Hub TerminalId:{termimalId} LockToken:{LockToken}", context.TerminalId, message.LockToken);
+         _logger.LogInformation("Downlink- IoT Hub TerminalId:{termimalId} LockToken:{LockToken}", context.TerminalId, lockToken);
 
          // Use default formatter and replace with message specific formatter if configured.
-         string payloadFormatter;
-         if (!message.Properties.TryGetValue(Constants.IoTHubDownlinkPayloadFormatterProperty, out payloadFormatter) || string.IsNullOrEmpty(payloadFormatter))
+         string payloadFormatterName;
+         if (!message.Properties.TryGetValue(Constants.IoTHubDownlinkPayloadFormatterProperty, out payloadFormatterName) || string.IsNullOrEmpty(payloadFormatterName))
          {
-            payloadFormatter = context.PayloadFormatterDownlink;
+            payloadFormatterName = context.PayloadFormatterDownlink;
          }
 
-         _logger.LogInformation("Downlink- IoT Hub TerminalID:{termimalId} LockToken:{LockToken} Payload formatter:{payloadFormatter} ", context.TerminalId, message.LockToken, payloadFormatter);
+         _logger.LogInformation("Downlink- IoT Hub TerminalID:{termimalId} LockToken:{LockToken} Payload formatter:{payloadFormatter} ", context.TerminalId, lockToken, payloadFormatterName);
 
          try
          {
@@ -59,7 +60,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
             catch (ArgumentException aex)
             {
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} messageBytes:{2} not valid Text", context.TerminalId, message.LockToken, BitConverter.ToString(messageBytes));
+               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} messageBytes:{2} not valid Text", context.TerminalId, lockToken, BitConverter.ToString(messageBytes));
             }
 
             // This will fail for some messages, payload formatter gets bytes only
@@ -70,11 +71,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
             catch ( JsonReaderException jex)
             {
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} messageText:{2} not valid json", context.TerminalId, message.LockToken, BitConverter.ToString(messageBytes));
+               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} messageText:{2} not valid json", context.TerminalId, lockToken, BitConverter.ToString(messageBytes));
             }
 
             // This shouldn't fail, but it could for lots of diffent reasons, invalid path to blob, syntax error, interface broken etc.
-            IFormatterDownlink payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatter);
+            IFormatterDownlink payloadFormatterDownlink = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
 
             // This shouldn't fail, but it could for lots of different reasons, null references, divide by zero, out of range etc.
             byte[] payloadBytes = payloadFormatterDownlink.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
@@ -82,7 +83,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             // Validate payload before calling Myriota control message send API method
             if (payloadBytes is null)
             {
-               _logger.LogWarning("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} payload formatter:{payloadFormatter} Evaluate returned null", context.TerminalId, message.LockToken, payloadFormatter);
+               _logger.LogWarning("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} payload formatter:{payloadFormatter} Evaluate returned null", context.TerminalId, lockToken, payloadFormatterName);
 
                await context.DeviceClient.RejectAsync(message);
 
@@ -91,7 +92,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
             {
-               _logger.LogWarning("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, message.LockToken, payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
+               _logger.LogWarning("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, lockToken, payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
                await context.DeviceClient.RejectAsync(message);
 
@@ -99,12 +100,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
 
             // This shouldn't fail, but it could few reasons mainly connectivity & message queuing etc.
-            _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} PayloadData:{payloadData} Length:{Length} sending", context.TerminalId, message.LockToken, Convert.ToHexString(payloadBytes), payloadBytes.Length);
+            _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} PayloadData:{payloadData} Length:{Length} sending", context.TerminalId, lockToken, Convert.ToHexString(payloadBytes), payloadBytes.Length);
 
             // Finally send the message using Myriota API
             string messageId = await _myriotaModuleAPI.SendAsync(context.TerminalId, payloadBytes);
 
-            _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} MessageID:{messageId} sent", context.TerminalId, message.LockToken, messageId);
+            _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} MessageID:{messageId} sent", context.TerminalId, lockToken, messageId);
 
             await context.DeviceClient.CompleteAsync(message);
          }
@@ -112,7 +113,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             await context.DeviceClient.RejectAsync(message);
 
-            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} failed", context.TerminalId, message.LockToken);
+            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} failed", context.TerminalId, lockToken);
          }
          finally
          {
