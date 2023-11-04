@@ -85,7 +85,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogWarning("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} payload formatter:{payloadFormatter} Evaluate returned null", context.TerminalId, lockToken, payloadFormatterName);
 
-               await context.DeviceClient.RejectAsync(message);
+               await context.DeviceClient.RejectAsync(lockToken);
 
                return;
             }
@@ -94,7 +94,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogWarning("Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} payloadData length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, lockToken, payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
-               await context.DeviceClient.RejectAsync(message);
+               await context.DeviceClient.RejectAsync(lockToken);
 
                return;
             }
@@ -107,11 +107,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} MessageID:{messageId} sent", context.TerminalId, lockToken, messageId);
 
-            await context.DeviceClient.CompleteAsync(message);
+            await context.DeviceClient.CompleteAsync(lockToken);
          }
          catch (Exception ex)
          {
-            await context.DeviceClient.RejectAsync(message);
+            await context.DeviceClient.RejectAsync(lockToken);
 
             _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{terminalId} LockToken:{LockToken} failed", context.TerminalId, lockToken);
          }
