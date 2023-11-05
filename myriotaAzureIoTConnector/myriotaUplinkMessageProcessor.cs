@@ -21,9 +21,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Microsoft.Azure.Devices.Client;
-using Microsoft.Azure.Devices.Client.Exceptions;
 using Microsoft.Azure.Functions.Worker;
-
 using Microsoft.Extensions.Logging;
 
 using Newtonsoft.Json;
@@ -48,8 +46,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       }
 
       [Function("UplinkMessageProcessor")]
-      [QueueOutput(queueName: "uplink-poison", Connection = "UplinkQueueStorage")]
-      public async Task<Models.UplinkPayloadQueueDto> UplinkMessageProcessor([QueueTrigger(queueName: "uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
+      public async Task UplinkMessageProcessor([QueueTrigger(queueName: "uplink", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
       {
          _logger.LogInformation("Uplink- PayloadId:{0} ReceivedAtUTC:{1:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} Endpoint:{3} Packets:{4}", payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
@@ -64,148 +61,63 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          // Process each packet in the payload. Myriota docs say only one packet per payload but just incase...
          foreach (Models.QueuePacket packet in payload.Data.Packets)
          {
-            // Lookup the device client in the cache or create a new one
-            Models.DeviceConnectionContext context;
-
             try
             {
-               context = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
-            }
-            catch (DeviceNotFoundException dnfex)
-            {
-               _logger.LogError(dnfex, "Uplink- PayloadId:{0} TerminalId:{1} terminal not found", payload.Id, packet.TerminalId);
+               // Convert Hex payload to bytes, if this fails packet broken
+               byte[] payloadBytes = Convert.FromHexString(packet.Value);
 
-               return payload;
+               Models.DeviceConnectionContext context = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
+
+               // This shouldn't fail, but it could for lots of different reasons, invalid path to blob, syntax error, interface broken etc.
+               IFormatterUplink formatter = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
+
+               Dictionary<string, string> properties = new Dictionary<string, string>();
+
+               // This shouldn't fail, but it could for lots of different reasons, null references, divide by zero, out of range etc.
+               JObject telemetryEvent = formatter.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
+               if (telemetryEvent is null)
+               {
+                  _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed returned null", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
+
+                  throw new NullReferenceException("Payload formatter.exvaluate returned null");
+               }
+
+               // Enrich the telemetry event with metadata, using TryAdd as some of the values may have been added by the formatter
+               telemetryEvent.TryAdd("PayloadId", payload.Id);
+               telemetryEvent.TryAdd("EndpointReference", payload.EndpointRef);
+               telemetryEvent.TryAdd("TerminalId", packet.TerminalId);
+               telemetryEvent.TryAdd("PacketArrivedAtUtc", packet.Timestamp.ToString("s", CultureInfo.InvariantCulture));
+               telemetryEvent.TryAdd("PayloadReceivedAtUtc", payload.PayloadReceivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
+               telemetryEvent.TryAdd("PayloadArrivedAtUtc", payload.PayloadArrivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
+
+               if (_logger.IsEnabled(LogLevel.Debug))
+               {
+                  _logger.LogDebug("Uplink- PayloadId:{0} TerminalId:{1} TelemetryEvent:{2}", payload.Id, packet.TerminalId, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
+               }
+
+               using (Message ioTHubmessage = new Message(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
+               {
+                  // This is so nasty but can't find a better way
+                  foreach (var property in properties)
+                  {
+                     ioTHubmessage.Properties.TryAdd(property.Key, property.Value);
+                  }
+
+                  // Populate the message properties, using TryAdd as some of the properties may have been added by the formatter
+                  ioTHubmessage.Properties.TryAdd("PayloadId", payload.Id);
+                  ioTHubmessage.Properties.TryAdd("EndpointReference", payload.EndpointRef);
+                  ioTHubmessage.Properties.TryAdd("TerminalId", packet.TerminalId);
+
+                  await context.DeviceClient.SendEventAsync(ioTHubmessage, cancellationToken);
+               }
             }
-            catch (Exception ex) // Maybe just send to poison queue or figure if transient error?
+            catch (Exception ex)
             {
-               _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} ", payload.Id, packet.TerminalId);
+               _logger.LogError(ex, "Uplink- PayloadId:{Id} TerminalId:{TerminalId}", payload.Id, packet.TerminalId);
 
                throw;
             }
-
-            // Get the payload formatter from Azure Storage container, compile, and then cache binary.
-            IFormatterUplink formatterUplink;
-
-            try
-            {
-               formatterUplink = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
-            }
-            catch (Azure.RequestFailedException aex)
-            {
-               _logger.LogError(aex, "Uplink- PayloadID:{0} payload formatter load failed", payload.Id);
-
-               return payload;
-            }
-            catch (NullReferenceException nex)
-            {
-               _logger.LogError(nex, "Uplink- PayloadID:{id} formatter:{formatter} compilation failed missing interface", payload.Id, context.PayloadFormatterUplink);
-
-               return payload;
-            }
-            catch (CSScriptLib.CompilerException cex)
-            {
-               _logger.LogError(cex, "Uplink- PayloadID:{id} formatter:{formatter} compiler failed", payload.Id, context.PayloadFormatterUplink);
-
-               return payload;
-            }
-            catch (Exception ex)
-            {
-               _logger.LogError(ex, "Uplink- PayloadID:{id} formatter:{formatter} compilation failed", payload.Id, context.PayloadFormatterUplink);
-
-               return payload;
-            }
-
-            byte[] payloadBytes;
-
-            // Convert Hex payload to bytes, if this fails packet broken
-            try
-            {
-               payloadBytes = Convert.FromHexString(packet.Value);
-            }
-            catch (FormatException fex)
-            {
-               _logger.LogError(fex, "Uplink- Payload:{0} TerminalId:{1} Convert.FromHexString({2}) failed", payload.Id, packet.TerminalId, packet.Value);
-
-               return payload;
-            }
-
-            // Process the payload with configured formatter
-            Dictionary<string, string> properties = new Dictionary<string, string>();
-            JObject telemetryEvent;
-
-            try
-            {
-               telemetryEvent = formatterUplink.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
-            }
-            catch (Exception ex)
-            {
-               _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
-
-               return payload;
-            }
-
-            if (telemetryEvent is null)
-            {
-               _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed returned null", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
-
-               return payload;
-            }
-
-            // Enrich the telemetry event with metadata, using TryAdd as some of the values may have been added by the formatter
-            telemetryEvent.TryAdd("PayloadId", payload.Id);
-            telemetryEvent.TryAdd("EndpointReference", payload.EndpointRef);
-            telemetryEvent.TryAdd("TerminalId", packet.TerminalId);
-            telemetryEvent.TryAdd("PacketArrivedAtUtc", packet.Timestamp.ToString("s", CultureInfo.InvariantCulture));
-            telemetryEvent.TryAdd("PayloadReceivedAtUtc", payload.PayloadReceivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
-            telemetryEvent.TryAdd("PayloadArrivedAtUtc", payload.PayloadArrivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
-
-            if (_logger.IsEnabled(LogLevel.Debug))
-            {
-               _logger.LogDebug("Uplink-PayloadId:{0} TerminalId:{1} TelemetryEvent:{2}", payload.Id, packet.TerminalId, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
-            }
-
-            using (Message ioTHubmessage = new Message(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
-            {
-               // This is so nasty but can't find a better way
-               foreach (var property in properties)
-               {
-                  ioTHubmessage.Properties.TryAdd(property.Key, property.Value);
-               }
-
-               // Populate the message properties, using TryAdd as some of the properties may have been added by the formatter
-               ioTHubmessage.Properties.TryAdd("PayloadId", payload.Id);
-               ioTHubmessage.Properties.TryAdd("EndpointReference", payload.EndpointRef);
-               ioTHubmessage.Properties.TryAdd("TerminalId", packet.TerminalId);
-
-               try
-               {
-                  await context.DeviceClient.SendEventAsync(ioTHubmessage, cancellationToken);
-               }
-               catch (IotHubException ex)
-               {
-                  if (ex.IsTransient)
-                  {
-                     _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} SendEventAsync transient failure", payload.Id, packet.TerminalId);
-
-                     throw;
-                  }
-
-                  _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} SendEventAsync failure", payload.Id, packet.TerminalId);
-
-                  return payload;
-               }
-               catch (Exception ex)
-               {
-                  _logger.LogError(ex, "Uplink- PayloadId:{0} TerminalId:{1} SendEventAsync failure", payload.Id, packet.TerminalId);
-
-                  return payload;
-               }
-            }
          }
-
-         // Proccessing successful, message can be deleted by QueueTrigger plumbing
-         return null;
       }
    }
 }
