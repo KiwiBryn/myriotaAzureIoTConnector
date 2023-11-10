@@ -43,17 +43,19 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       private readonly Models.PayloadformatterSettings _payloadformatterSettings;
       private readonly IPayloadFormatterCache _payloadFormatterCache;
       private readonly IIoTHubDownlink _ioTHubDownlink;
+      private readonly IIoTCentralDownlink _ioTCentralDownlink;
       private readonly IMyriotaModuleAPI _myriotaModuleAPI;
 
       private static readonly IAppCache _deviceConnectionCache = new CachingService();
 
-      public DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IPayloadFormatterCache payloadFormatterCache, IIoTHubDownlink ioTHubDownlink, IMyriotaModuleAPI myriotaModuleAPI)
+      public DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IPayloadFormatterCache payloadFormatterCache, IIoTHubDownlink ioTHubDownlink, IIoTCentralDownlink ioTCentralDownlink, IMyriotaModuleAPI myriotaModuleAPI)
       {
          _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
          _azureIoTSettings = azureIoTSettings.Value;
          _payloadformatterSettings = payloadformatterSettings.Value;
          _payloadFormatterCache = payloadFormatterCache;
          _ioTHubDownlink = ioTHubDownlink;
+         _ioTCentralDownlink = ioTCentralDownlink;
          _myriotaModuleAPI = myriotaModuleAPI;
       }
 
@@ -88,7 +90,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             case Models.ApplicationType.IoTCentral:
                context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
 
-               await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTCentralMessageHandler, context, cancellationToken);
+               await context.DeviceClient.SetReceiveMessageHandlerAsync(_ioTCentralDownlink.AzureIoTCentralMessageHandler, context, cancellationToken);
                break;
             default:
                _logger.LogError("Uplink- Azure IoT ApplicationType unknown {ApplicationType}", _azureIoTSettings.ApplicationType);
