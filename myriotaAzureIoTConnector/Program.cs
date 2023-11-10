@@ -24,55 +24,56 @@ using Microsoft.Extensions.Logging;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-    internal class Program
-    {
-        static async Task Main(string[] args)
-        {
-            var builder = new HostBuilder();
+   internal class Program
+   {
+      static async Task Main(string[] args)
+      {
+         var builder = new HostBuilder();
 
-            builder.ConfigureFunctionsWorkerDefaults()
-               .ConfigureAppConfiguration(c =>
-               {
-                   c.AddUserSecrets<Program>(optional: true, reloadOnChange: false);
-                   c.AddEnvironmentVariables();
-               })
-             .ConfigureLogging((context, l) =>
-             {
-                 l.AddConsole();
-                 l.AddApplicationInsightsWebJobs(o => o.ConnectionString = context.Configuration.GetConnectionString("ApplicationInsights"));
-             })
-            .ConfigureServices((hostContext,services) =>
+         builder.ConfigureFunctionsWorkerDefaults()
+            .ConfigureAppConfiguration(c =>
             {
-                services.AddOptions<Models.AzureIoT>().Configure<IConfiguration>((settings, configuration) =>
-                {
-                    configuration.GetSection("AzureIoT").Bind(settings);
-                });
-                services.AddSingleton<IDeviceConnectionCache, DeviceConnectionCache>();
-                services.AddOptions<Models.PayloadformatterSettings>().Configure<IConfiguration>((settings, configuration) =>
-                {
-                    configuration.GetSection("PayloadFormatters").Bind(settings);
-                });
-                services.AddSingleton<IPayloadFormatterCache, PayloadFormatterCache>();
-                services.AddOptions<Models.MyriotaSettings>().Configure<IConfiguration>((settings, configuration) =>
-                {
-                    configuration.GetSection("Myriota").Bind(settings);
-                });
-           		services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
-                services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
-                services.AddAzureClients(azureClient =>
-                {
-                    azureClient.AddBlobServiceClient(hostContext.Configuration.GetConnectionString("PayloadFormattersStorage"));
-                });
-                services.AddHostedService<StartUpService>();
+               c.AddUserSecrets<Program>(optional: true, reloadOnChange: false);
+               c.AddEnvironmentVariables();
             })
-            .UseConsoleLifetime();
+           .ConfigureLogging((context, l) =>
+           {
+              l.AddConsole();
+              l.AddApplicationInsightsWebJobs(o => o.ConnectionString = context.Configuration.GetConnectionString("ApplicationInsights"));
+           })
+           .ConfigureServices((hostContext,services) =>
+           {
+              services.AddOptions<Models.AzureIoT>().Configure<IConfiguration>((settings, configuration) =>
+              {
+                 configuration.GetSection("AzureIoT").Bind(settings);
+           });
+           services.AddSingleton<IDeviceConnectionCache, DeviceConnectionCache>();
+           services.AddOptions<Models.PayloadformatterSettings>().Configure<IConfiguration>((settings, configuration) =>
+           {
+              configuration.GetSection("PayloadFormatters").Bind(settings);
+           });
+           services.AddSingleton<IPayloadFormatterCache, PayloadFormatterCache>();
+           services.AddSingleton<IIoTHubDownlink, IoTHubDownlink>();
+           services.AddOptions<Models.MyriotaSettings>().Configure<IConfiguration>((settings, configuration) =>
+           {
+              configuration.GetSection("Myriota").Bind(settings);
+           });
+           services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
+           services.AddSingleton<IMyriotaModuleAPI, MyriotaModuleAPI>();
+           services.AddAzureClients(azureClient =>
+           {
+              azureClient.AddBlobServiceClient(hostContext.Configuration.GetConnectionString("PayloadFormattersStorage"));
+           });
+           services.AddHostedService<StartUpService>();
+         })
+         .UseConsoleLifetime();
 
-            var app = builder.Build();
+         var app = builder.Build();
 
-            using (app)
-            {
-                await app.RunAsync();
-            }
-        }
-    }
+         using (app)
+         {
+            await app.RunAsync();
+         }
+      }
+   }
 }
