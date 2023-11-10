@@ -42,16 +42,18 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       private readonly Models.AzureIoT _azureIoTSettings;
       private readonly Models.PayloadformatterSettings _payloadformatterSettings;
       private readonly IPayloadFormatterCache _payloadFormatterCache;
+      private readonly IIoTHubDownlink _ioTHubDownlink;
       private readonly IMyriotaModuleAPI _myriotaModuleAPI;
 
       private static readonly IAppCache _deviceConnectionCache = new CachingService();
 
-      public DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IPayloadFormatterCache payloadFormatterCache, IMyriotaModuleAPI myriotaModuleAPI)
+      public DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IPayloadFormatterCache payloadFormatterCache, IIoTHubDownlink ioTHubDownlink, IMyriotaModuleAPI myriotaModuleAPI)
       {
          _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
          _azureIoTSettings = azureIoTSettings.Value;
          _payloadformatterSettings = payloadformatterSettings.Value;
          _payloadFormatterCache = payloadFormatterCache;
+         _ioTHubDownlink = ioTHubDownlink;
          _myriotaModuleAPI = myriotaModuleAPI;
       }
 
@@ -81,7 +83,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                      throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
                }
 
-               await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
+               await context.DeviceClient.SetReceiveMessageHandlerAsync(_ioTHubDownlink.AzureIoTHubMessageHandler, context, cancellationToken);
                break;
             case Models.ApplicationType.IoTCentral:
                context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
