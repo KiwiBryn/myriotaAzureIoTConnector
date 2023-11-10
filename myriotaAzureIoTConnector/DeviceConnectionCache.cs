@@ -57,6 +57,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<Models.DeviceConnectionContext> GetOrAddAsync(string terminalId, CancellationToken cancellationToken)
       {
+         return await this.GetOrAddAsync(terminalId, null, cancellationToken);
+      }
+
+      public async Task<Models.DeviceConnectionContext> GetOrAddAsync(string terminalId, Models.Item item, CancellationToken cancellationToken)
+      {
          Models.DeviceConnectionContext context;
 
          switch (_azureIoTSettings.ApplicationType)
@@ -65,10 +70,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                switch (_azureIoTSettings.IoTHub.ConnectionType)
                {
                   case Models.AzureIotHubConnectionType.DeviceConnectionString:
-                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, cancellationToken), memoryCacheEntryOptions);
+                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceConnectionStringConnectAsync(terminalId, item, cancellationToken), memoryCacheEntryOptions);
                      break;
                   case Models.AzureIotHubConnectionType.DeviceProvisioningService:
-                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.IoTHub.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
+                     context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTHub.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
                      break;
                   default:
                      _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.IoTHub.ConnectionType);
@@ -79,7 +84,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTHubMessageHandler, context, cancellationToken);
                break;
             case Models.ApplicationType.IoTCentral:
-               context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
+               context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
 
                await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTCentralMessageHandler, context, cancellationToken);
                break;
@@ -96,9 +101,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          return context;
       }
 
-      private async Task<Models.DeviceConnectionContext> DeviceConnectionStringConnectAsync(string terminalId, CancellationToken cancellationToken)
+      private async Task<Models.DeviceConnectionContext> DeviceConnectionStringConnectAsync(string terminalId, Models.Item item, CancellationToken cancellationToken)
       {
-         Models.Item item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
+         if (item is null)
+         { 
+            item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
+         }
 
          if (!item.Attributes.TryGetValue("DtdlModelId", out string? dtdlModelId))
          {
@@ -136,9 +144,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          };
       }
 
-      private async Task<Models.DeviceConnectionContext> DeviceProvisioningServiceConnectAsync(string terminalId, Models.AzureDeviceProvisioningService deviceProvisioningService, CancellationToken cancellationToken)
+      private async Task<Models.DeviceConnectionContext> DeviceProvisioningServiceConnectAsync(string terminalId, Models.Item item, Models.AzureDeviceProvisioningService deviceProvisioningService, CancellationToken cancellationToken)
       {
-         Models.Item item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
+         if (item is null)
+         {
+            item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
+         }
 
          if (!item.Attributes.TryGetValue("DtdlModelId", out string? dtdlModelId))
          {
@@ -216,7 +227,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             _logger.LogInformation("Myriota TerminalId:{TerminalId}", item.Id);
 
-            await this.GetOrAddAsync(item.Id, cancellationToken);
+            await this.GetOrAddAsync(item.Id, item, cancellationToken);
          }
       }
 
