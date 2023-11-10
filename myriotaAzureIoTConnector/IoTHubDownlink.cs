@@ -26,11 +26,6 @@ using Newtonsoft.Json.Linq;
 
 using PayloadFormatter;
 
-public interface IIoTHubDownlink
-{
-   public Task AzureIoTHubMessageHandler(Message message, object userContext);
-}
-
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
