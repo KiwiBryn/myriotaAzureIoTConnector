@@ -76,7 +76,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                      context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTHub.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
                      break;
                   default:
-                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {0}", _azureIoTSettings.IoTHub.ConnectionType);
+                     _logger.LogError("Uplink- Azure IoT Hub ConnectionType unknown {ConnectionType}", _azureIoTSettings.IoTHub.ConnectionType);
 
                      throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
                }
@@ -89,7 +89,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                await context.DeviceClient.SetReceiveMessageHandlerAsync(AzureIoTCentralMessageHandler, context, cancellationToken);
                break;
             default:
-               _logger.LogError("Uplink- Azure IoT ApplicationType unknown {0}", _azureIoTSettings.ApplicationType);
+               _logger.LogError("Uplink- Azure IoT ApplicationType unknown {ApplicationType}", _azureIoTSettings.ApplicationType);
 
                throw new NotImplementedException("AzureIoT Hub unsupported ApplicationType");
          }
@@ -161,7 +161,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             payloadFormatterUplink = _payloadformatterSettings.UplinkFormatterDefault;
          }
 
-         if (!item.Attributes.TryGetValue("payloadFormatterDownlink", out string? payloadFormatterDownlink))
+         if (!item.Attributes.TryGetValue("PayloadFormatterDownlink", out string? payloadFormatterDownlink))
          {
             payloadFormatterDownlink = _payloadformatterSettings.DownlinkFormatterDefault;
          }
@@ -201,9 +201,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                if (result.Status != ProvisioningRegistrationStatusType.Assigned)
                {
-                  _logger.LogWarning("Uplink-DeviceID:{0} RegisterAsync status:{1} failed ", terminalId, result.Status);
+                  _logger.LogWarning("Uplink- TerminalId:{terminalId} RegisterAsync status:{Status} failed ", terminalId, result.Status);
 
-                  throw new ApplicationException($"Uplink-DeviceID:{0} RegisterAsync status:{1} failed");
+                  throw new ApplicationException($"Uplink- TerminalId:{terminalId} RegisterAsync status:{result.Status} failed");
                }
 
                IAuthenticationMethod authentication = new DeviceAuthenticationWithRegistrySymmetricKey(result.DeviceId, (securityProvider as SecurityProviderSymmetricKey).GetPrimaryKey());
@@ -235,7 +235,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       {
          Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
 
-         _logger.LogWarning("Downlink-TerminalId:{deviceId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", context.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
+         _logger.LogWarning("Downlink- TerminalId:{TerminalId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", context.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
 
          return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
       }
