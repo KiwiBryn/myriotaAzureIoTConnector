@@ -54,6 +54,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
            });
            services.AddSingleton<IPayloadFormatterCache, PayloadFormatterCache>();
            services.AddSingleton<IIoTHubDownlink, IoTHubDownlink>();
+           services.AddSingleton<IIoTCentralDownlink, IoTCentralDownlink>();
            services.AddOptions<Models.MyriotaSettings>().Configure<IConfiguration>((settings, configuration) =>
            {
               configuration.GetSection("Myriota").Bind(settings);
