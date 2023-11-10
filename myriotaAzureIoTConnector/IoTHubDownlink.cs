@@ -26,12 +26,28 @@ using Newtonsoft.Json.Linq;
 
 using PayloadFormatter;
 
+public interface IIoTHubDownlink
+{
+   public Task AzureIoTHubMessageHandler(Message message, object userContext);
+}
+
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   internal partial class DeviceConnectionCache : IDeviceConnectionCache
+   internal class IoTHubDownlink : IIoTHubDownlink
    {
-      public async Task AzureIoTHubMessageHandler(Message message, object userContext)
+      private readonly ILogger<IoTHubDownlink> _logger;
+      private readonly IPayloadFormatterCache _payloadFormatterCache;
+      private readonly IMyriotaModuleAPI _myriotaModuleAPI;
+
+      public IoTHubDownlink(ILogger<IoTHubDownlink> logger, IPayloadFormatterCache payloadFormatterCache, IMyriotaModuleAPI myriotaModuleAPI)
+      {
+         _logger = logger;
+         _payloadFormatterCache = payloadFormatterCache;
+         _myriotaModuleAPI = myriotaModuleAPI;
+      }
+
+   public async Task AzureIoTHubMessageHandler(Message message, object userContext)
       {
          string lockToken = message.LockToken;
          Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
