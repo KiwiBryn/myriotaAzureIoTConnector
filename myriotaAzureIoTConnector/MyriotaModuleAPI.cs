@@ -19,7 +19,6 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 using RestSharp;
@@ -29,12 +28,10 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
    internal class MyriotaModuleAPI : IMyriotaModuleAPI
    {
-      private readonly ILogger<MyriotaModuleAPI> _logger;
       private readonly Models.MyriotaSettings _myiotaSettings;
 
-      public MyriotaModuleAPI(ILogger<MyriotaModuleAPI> logger, IOptions<Models.MyriotaSettings> myiotaSettings)
+      public MyriotaModuleAPI(IOptions<Models.MyriotaSettings> myiotaSettings)
       {
-         _logger = logger;
          _myiotaSettings = myiotaSettings.Value;
       }
 
@@ -53,6 +50,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
             Models.ModulesResponse response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
+
+            if ((response == null) || (response.Items == null) || (response.Items.Count != 1)) 
+            {
+               throw new ApplicationException($"MyriotaModuleAPI - GetAsync modudle:{TerminalId} not found");
+            }
 
             return response.Items[0];
          }
@@ -74,6 +76,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
             Models.ModulesResponse response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
+
+            if ((response == null) || (response.Items == null) || (response.Items.Count == 0))
+            {
+               throw new ApplicationException($"MyriotaModuleAPI - GetAsync no module list returned");
+            }
 
             return response.Items;
          }
