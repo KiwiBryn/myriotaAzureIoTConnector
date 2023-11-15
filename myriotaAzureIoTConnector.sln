@@ -29,11 +29,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Uplink", "Uplink", "{13AC98
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Downlink", "Downlink", "{E7567147-28F2-4F60-B71F-AE127BFB246A}"
 	ProjectSection(SolutionItems) = preProject
+		PayloadFormatters\Downlink\Acceleration.cs = PayloadFormatters\Downlink\Acceleration.cs
 		PayloadFormatters\Downlink\BrokenInterface.cs = PayloadFormatters\Downlink\BrokenInterface.cs
 		PayloadFormatters\Downlink\BrokenRuntime.cs = PayloadFormatters\Downlink\BrokenRuntime.cs
 		PayloadFormatters\Downlink\BrokenSyntax.cs = PayloadFormatters\Downlink\BrokenSyntax.cs
 		PayloadFormatters\Downlink\default.cs = PayloadFormatters\Downlink\default.cs
 		PayloadFormatters\Downlink\FanSpeed.cs = PayloadFormatters\Downlink\FanSpeed.cs
+		PayloadFormatters\Downlink\Density.cs = PayloadFormatters\Downlink\Density.cs
 		PayloadFormatters\Downlink\LightsOffOn.cs = PayloadFormatters\Downlink\LightsOffOn.cs
 		PayloadFormatters\Downlink\TemperatureAlerts.cs = PayloadFormatters\Downlink\TemperatureAlerts.cs
 		PayloadFormatters\Downlink\TemperatureTarget.cs = PayloadFormatters\Downlink\TemperatureTarget.cs
