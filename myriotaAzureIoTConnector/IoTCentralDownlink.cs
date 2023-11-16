@@ -47,10 +47,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task AzureIoTCentralMessageHandler(Message message, object userContext)
       {
-         string lockToken = message.LockToken;
-         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;  
+         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
 
-         _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken}", context.TerminalId, lockToken);
+         _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken}", context.TerminalId, message.LockToken);
+
+         // broken out so using for message only has to be inside try
+         string lockToken = message.LockToken;
 
          try
          {
@@ -89,56 +91,42 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // Get the message payload try converting it to text then to JSON
                byte[] messageBytes = message.GetBytes();
 
-               // This will fail for some messages, payload formatter gets bytes only
                string messageText = string.Empty;
-               try
-               {
-                  messageText = Encoding.UTF8.GetString(messageBytes);
-               }
-               catch (FormatException fex)
-               {
-                  _logger.LogWarning(fex, "Downlink- IoT Central TerminalId:{TerminalId} LockToken:{lockToken} Encoding.UTF8.GetString(messageBytes) failed", context.TerminalId, lockToken, BitConverter.ToString(messageBytes));
-               }
-
                JObject? messageJson = null;
 
-               // Check to see if special case for Azure IoT central command with no request payload
-               if (messageText.IsPayloadEmpty())
+               try
                {
-                  if (method.Payload.IsPayloadValidJson())
+                  // This will fail for some messages, then payload formatter gets bytes only
+                  messageText = Encoding.UTF8.GetString(messageBytes).Trim();
+
+                  // Definitely not JSON with special case for "empty" payload
+                  if (messageText == "@")
                   {
                      messageJson = JObject.Parse(method.Payload);
                   }
-                  else
-                  {
-                     _logger.LogWarning("Downlink- IoT Central TerminalId:{TerminalId} LockToken:{lockToken} method-name:{methodName} IsPayloadValidJson:{Payload} failed", context.TerminalId, lockToken, methodName, method.Payload);
 
-                     await context.DeviceClient.RejectAsync(lockToken);
-
-                     return;
-                  }
-               }
-               else
-               {
-                  if (messageText.IsPayloadValidJson())
+                  if ((messageText.StartsWith("{") && messageText.EndsWith("}")) || (messageText.StartsWith("[") && messageText.EndsWith("]")))
                   {
+                     // If the payload looks like JSON parse it
                      messageJson = JObject.Parse(messageText);
                   }
                   else
                   {
-                     // Normally wouldn't use exceptions for flow control but, I can't think of a better way...
-                     try
-                     {
-                        messageJson = new JObject(new JProperty(methodName, JProperty.Parse(messageText)));
-                     }
-                     catch (JsonException ex)
-                     {
-                        messageJson = new JObject(new JProperty(methodName, messageText));
-                     }
+                     messageJson = new JObject(new JProperty(methodName, messageText));
                   }
                }
+               // When Encoding.UTF8.GetString is broken
+               catch (ArgumentException aex)
+               {
+                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} messageBytes:{messageBytes} not valid text exception:{Message}", context.TerminalId, lockToken, BitConverter.ToString(messageBytes), aex.Message);
+               }
+               // When JObject.Parse fails
+               catch (JsonReaderException jex)
+               {
+                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} messageText:{messageText} not valid json exception:{Message}", context.TerminalId, lockToken, messageText, jex.Message);
+               }
 
-               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Method:{methodName} Payload:{3}", context.DeviceClient, lockToken, methodName, BitConverter.ToString(messageBytes));
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Method:{methodName} Payload:{3}", context.TerminalId, lockToken, methodName, BitConverter.ToString(messageBytes));
 
                // This shouldn't fail, but it could for lots of diffent reasons, invalid path to blob, syntax error, interface broken etc.
                IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
