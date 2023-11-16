@@ -62,7 +62,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                Models.DeviceConnectionContext context = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
 
-               _logger.LogError("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Payload formatter:{PayloadFormatterUplink} Value:{Value} Bytes:{payloadBytes} ", payload.Id, packet.TerminalId, context.PayloadFormatterUplink, packet.Value, Convert.ToHexString(payloadBytes));
+               _logger.LogInformation("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Payload formatter:{PayloadFormatterUplink} Value:{Value} Bytes:{payloadBytes} ", payload.Id, packet.TerminalId, context.PayloadFormatterUplink, packet.Value, Convert.ToHexString(payloadBytes));
 
                // This shouldn't fail, but it could for lots of different reasons, invalid path to blob, syntax error, interface broken etc.
                IFormatterUplink formatter = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
