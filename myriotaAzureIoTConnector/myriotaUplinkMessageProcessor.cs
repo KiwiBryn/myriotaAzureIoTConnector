@@ -50,23 +50,19 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       {
          _logger.LogInformation("Uplink- PayloadId:{0} ReceivedAtUTC:{1:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} Endpoint:{3} Packets:{4}", payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
-         if (_logger.IsEnabled(LogLevel.Debug))
-         {
-            foreach (Models.QueuePacket packet in payload.Data.Packets)
-            {
-               _logger.LogDebug("Uplink- PayloadId:{0} TerminalId:{1} Timestamp:{2:yyyy:MM:dd HH:mm:ss} Value:{3}", payload.Id, packet.TerminalId, packet.Timestamp, packet.Value);
-            }
-         }
-
          // Process each packet in the payload. Myriota docs say only one packet per payload but just incase...
          foreach (Models.QueuePacket packet in payload.Data.Packets)
          {
+            _logger.LogDebug("Uplink- PayloadId:{0} TerminalId:{1} Timestamp:{2:yyyy:MM:dd HH:mm:ss} Value:{3}", payload.Id, packet.TerminalId, packet.Timestamp, packet.Value);
+
             try
             {
                // Convert Hex payload to bytes, if this fails packet broken
                byte[] payloadBytes = Convert.FromHexString(packet.Value);
 
                Models.DeviceConnectionContext context = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
+
+               _logger.LogError("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Payload formatter:{PayloadFormatterUplink} Value:{Value} Bytes:{payloadBytes} ", payload.Id, packet.TerminalId, context.PayloadFormatterUplink, packet.Value, Convert.ToHexString(payloadBytes));
 
                // This shouldn't fail, but it could for lots of different reasons, invalid path to blob, syntax error, interface broken etc.
                IFormatterUplink formatter = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
