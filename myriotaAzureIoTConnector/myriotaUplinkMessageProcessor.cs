@@ -48,25 +48,21 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       [Function("UplinkMessageProcessor")]
       public async Task UplinkMessageProcessor([QueueTrigger(queueName: "%UplinkQueueName%", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
       {
-         _logger.LogInformation("Uplink- PayloadId:{0} ReceivedAtUTC:{1:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{2:yyyy:MM:dd HH:mm:ss} Endpoint:{3} Packets:{4}", payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
-
-         if (_logger.IsEnabled(LogLevel.Debug))
-         {
-            foreach (Models.QueuePacket packet in payload.Data.Packets)
-            {
-               _logger.LogDebug("Uplink- PayloadId:{0} TerminalId:{1} Timestamp:{2:yyyy:MM:dd HH:mm:ss} Value:{3}", payload.Id, packet.TerminalId, packet.Timestamp, packet.Value);
-            }
-         }
+         _logger.LogInformation("Uplink- PayloadId:{Id} ReceivedAtUTC:{PayloadReceivedAtUtc:yyyy:MM:dd HH:mm:ss} ArrivedAtUTC:{PayloadArrivedAtUtc:yyyy:MM:dd HH:mm:ss} Endpoint reference:{EndpointRef} Packets:{Count}", payload.Id, payload.PayloadReceivedAtUtc, payload.PayloadArrivedAtUtc, payload.EndpointRef, payload.Data.Packets.Count);
 
          // Process each packet in the payload. Myriota docs say only one packet per payload but just incase...
          foreach (Models.QueuePacket packet in payload.Data.Packets)
          {
+            _logger.LogInformation("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Timestamp:{Timestamp:yyyy:MM:dd HH:mm:ss} Value:{Value}", payload.Id, packet.TerminalId, packet.Timestamp, packet.Value);
+
             try
             {
                // Convert Hex payload to bytes, if this fails packet broken
                byte[] payloadBytes = Convert.FromHexString(packet.Value);
 
                Models.DeviceConnectionContext context = await _deviceConnectionCache.GetOrAddAsync(packet.TerminalId, cancellationToken);
+
+               _logger.LogInformation("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Payload formatter:{PayloadFormatterUplink} Value:{Value}", payload.Id, packet.TerminalId, context.PayloadFormatterUplink, packet.Value);
 
                // This shouldn't fail, but it could for lots of different reasons, invalid path to blob, syntax error, interface broken etc.
                IFormatterUplink formatter = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
@@ -77,9 +73,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                JObject telemetryEvent = formatter.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
                if (telemetryEvent is null)
                {
-                  _logger.LogError("Uplink- PayloadId:{0} TerminalId:{1} Value:{2} Bytes:{3} payload formatter evaluate failed returned null", payload.Id, packet.TerminalId, packet.Value, Convert.ToHexString(payloadBytes));
+                  _logger.LogWarning("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Payload formatter:{PayloadFormatterUplink} Value:{Value} evaluate failed returned null", payload.Id, packet.TerminalId, context.PayloadFormatterUplink, packet.Value);
 
-                  throw new NullReferenceException("Payload formatter.exvaluate returned null");
+                  throw new NullReferenceException("Payload formatter.Evaluate returned null");
                }
 
                // Enrich the telemetry event with metadata, using TryAdd as some of the values may have been added by the formatter
@@ -90,10 +86,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                telemetryEvent.TryAdd("PayloadReceivedAtUtc", payload.PayloadReceivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
                telemetryEvent.TryAdd("PayloadArrivedAtUtc", payload.PayloadArrivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
 
-               if (_logger.IsEnabled(LogLevel.Debug))
-               {
-                  _logger.LogDebug("Uplink- PayloadId:{0} TerminalId:{1} TelemetryEvent:{2}", payload.Id, packet.TerminalId, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
-               }
+               _logger.LogInformation("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Payload formatter:{PayloadFormatterUplink} TelemetryEvent:{telemetryEvent}", payload.Id, packet.TerminalId, context.PayloadFormatterUplink, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
 
                using (Message ioTHubmessage = new Message(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
                {
@@ -113,7 +106,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
             catch (Exception ex)
             {
-               _logger.LogError(ex, "Uplink- PayloadId:{Id} TerminalId:{TerminalId}", payload.Id, packet.TerminalId);
+               _logger.LogError(ex, "Uplink- PayloadId:{Id} TerminalId:{TerminalId} Value:{Value}", payload.Id, packet.TerminalId, packet.Value);
 
                throw;
             }
