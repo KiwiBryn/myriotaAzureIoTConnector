@@ -21,7 +21,6 @@ using Azure.Storage.Queues;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 
 namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controllers
