@@ -99,18 +99,31 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                   // This will fail for some messages, then payload formatter gets bytes only
                   messageText = Encoding.UTF8.GetString(messageBytes).Trim();
 
-                  // Definitely not JSON with special case for "empty" payload
+                  // special case for for "empty" payload
                   if (messageText == "@")
                   {
                      messageJson = JObject.Parse(method.Payload);
                   }
 
-                  if ((messageText.StartsWith("{") && messageText.EndsWith("}")) || (messageText.StartsWith("[") && messageText.EndsWith("]")))
+                  // It wasn't an "empty" payload try parsing it 
+                  if (messageJson is null)
                   {
-                     // If the payload looks like JSON parse it
-                     messageJson = JObject.Parse(messageText);
+                     // Might be JSON so try to parse it
+                     if ((messageText.StartsWith("{") && messageText.EndsWith("}")) || (messageText.StartsWith("[") && messageText.EndsWith("]")))
+                     {
+                        try
+                        {
+                           messageJson = JObject.Parse(messageText);
+                        }
+                        catch (JsonReaderException jex)
+                        {
+                           // This is intentional as wasn't JSON
+                        }
+                     }
                   }
-                  else
+
+                  // Final fallback option
+                  if ( messageJson is null)
                   {
                      messageJson = new JObject(new JProperty(methodName, messageText));
                   }
