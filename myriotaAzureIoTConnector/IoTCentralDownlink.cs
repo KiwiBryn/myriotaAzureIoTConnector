@@ -102,41 +102,46 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                   // special case for for "empty" payload
                   if (messageText == "@")
                   {
-                     messageJson = JObject.Parse(method.Payload);
-                  }
-
-                  // It wasn't an "empty" payload try parsing it 
-                  if (messageJson is null)
-                  {
-                     // Might be JSON so try to parse it
-                     if ((messageText.StartsWith("{") && messageText.EndsWith("}")) || (messageText.StartsWith("[") && messageText.EndsWith("]")))
+                     // If the method payload in the application configuration is broken nothing can be done
+                     try
                      {
-                        try
-                        {
-                           messageJson = JObject.Parse(messageText);
-                        }
-                        catch (JsonReaderException jex)
-                        {
-                           // This is intentional as wasn't JSON
-                        }
+                        messageJson = JObject.Parse(method.Payload);
+                     }
+                     catch (JsonReaderException jex)
+                     {
+                        _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} method.Payload:{method.Payload} not valid", context.TerminalId, lockToken, method.Payload);
+
+                        await context.DeviceClient.RejectAsync(lockToken);
+
+                        return;
                      }
                   }
-
-                  // Final fallback option
-                  if ( messageJson is null)
+                  else
                   {
-                     messageJson = new JObject(new JProperty(methodName, messageText));
+                     // See if the message payload is valid JSON e.g. an object, vector etc.
+                     try
+                     {
+                        messageJson = JObject.Parse(messageText);
+                     }
+                     catch (JsonReaderException) 
+                     {
+                        // See if the message text is a valid property value e.g. enumeration, number, boolean etc.
+                        try
+                        {
+                           messageJson = new JObject(new JProperty(methodName, JProperty.Parse(messageText)));
+                        }
+                        catch (JsonException)
+                        {
+                           // if not it must be a property e.g. a string value WARNING - That doesn't look like valid JSON
+                           messageJson = new JObject(new JProperty(methodName, messageText));
+                        }
+                     }
                   }
                }
                // When Encoding.UTF8.GetString is broken
                catch (ArgumentException aex)
                {
                   _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} messageBytes:{messageBytes} not valid text exception:{Message}", context.TerminalId, lockToken, BitConverter.ToString(messageBytes), aex.Message);
-               }
-               // When JObject.Parse fails
-               catch (JsonReaderException jex)
-               {
-                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} messageText:{messageText} not valid json exception:{Message}", context.TerminalId, lockToken, messageText, jex.Message);
                }
 
                _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Method:{methodName} Payload:{3}", context.TerminalId, lockToken, methodName, BitConverter.ToString(messageBytes));
