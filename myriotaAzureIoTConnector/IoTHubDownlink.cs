@@ -42,7 +42,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          _myriotaModuleAPI = myriotaModuleAPI;
       }
 
-   public async Task AzureIoTHubMessageHandler(Message message, object userContext)
+      public async Task AzureIoTHubMessageHandler(Message message, object userContext)
       {
          string lockToken = message.LockToken;
          Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
@@ -60,31 +60,32 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                   payloadFormatterName = context.PayloadFormatterDownlink;
                }
 
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{termimalId} LockToken:{lockToken} Payload formatter:{payloadFormatter} ", context.TerminalId, lockToken, payloadFormatterName);
+               _logger.LogInformation("Downlink- IoT Hub TerminalID:{termimalId} LockToken:{lockToken} Payload formatter:{payloadFormatterName} ", context.TerminalId, lockToken, payloadFormatterName);
 
                // If this fails payload broken
                byte[] messageBytes = message.GetBytes();
 
-               // This will fail for some messages, payload formatter gets bytes only
-               string messageText = string.Empty;
+               JObject? messageJson = null;
+
                try
                {
-                  messageText = Encoding.UTF8.GetString(messageBytes);
+                  // This will fail for some messages, payload formatter gets bytes only
+                  string messageText = Encoding.UTF8.GetString(messageBytes);
+
+                  // This will fail for some messages, payload formatter gets bytes only
+                  try
+                  {
+                     messageJson = JObject.Parse(messageText);
+                  }
+                  catch (JsonReaderException jex)
+                  {
+                     _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{lockToken} messageText:{messageBytes} not valid json", context.TerminalId, lockToken, BitConverter.ToString(messageBytes));
+                  }
                }
+               // When Encoding.UTF8.GetString is broken
                catch (ArgumentException aex)
                {
-                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{lockToken} messageBytes:{2} not valid Text", context.TerminalId, lockToken, BitConverter.ToString(messageBytes));
-               }
-
-               // This will fail for some messages, payload formatter gets bytes only
-               JObject? messageJson = null;
-               try
-               {
-                  messageJson = JObject.Parse(messageText);
-               }
-               catch (JsonReaderException jex)
-               {
-                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{lockToken} messageText:{2} not valid json", context.TerminalId, lockToken, BitConverter.ToString(messageBytes));
+                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{lockToken} messageBytes:{messageBytes} not valid text exception:{Message}", context.TerminalId, lockToken, BitConverter.ToString(messageBytes), aex.Message);
                }
 
                // This shouldn't fail, but it could for lots of diffent reasons, invalid path to blob, syntax error, interface broken etc.
