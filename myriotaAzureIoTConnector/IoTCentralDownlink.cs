@@ -91,13 +91,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // Get the message payload try converting it to text then to JSON
                byte[] messageBytes = message.GetBytes();
 
-               string messageText = string.Empty;
                JObject? messageJson = null;
 
                try
                {
                   // This will fail for some messages, then payload formatter gets bytes only
-                  messageText = Encoding.UTF8.GetString(messageBytes).Trim();
+                  string messageText = Encoding.UTF8.GetString(messageBytes).Trim();
 
                   // special case for for "empty" payload
                   if (messageText == "@")
