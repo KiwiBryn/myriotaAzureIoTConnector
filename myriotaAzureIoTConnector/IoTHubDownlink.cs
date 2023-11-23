@@ -110,7 +110,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                   return;
                }
 
-               // This shouldn't fail, but it could few reasons mainly connectivity & myriota message queuing etc.
+               // This shouldn't fail, but it could few reasons mainly connectivity & message queuing etc.
                _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{lockToken} PayloadBytes:{payloadBytes} Length:{Length} sending", context.TerminalId, lockToken, Convert.ToHexString(payloadBytes), payloadBytes.Length);
 
                // Finally send the message using Myriota API
