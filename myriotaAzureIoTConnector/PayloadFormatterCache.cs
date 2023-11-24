@@ -29,19 +29,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
    using PayloadFormatter;
 
 
-   public class PayloadFormatterCache : IPayloadFormatterCache
+   public class PayloadFormatterCache(IOptions<Models.PayloadformatterSettings> payloadformatterSettings, BlobServiceClient blobServiceClient) : IPayloadFormatterCache
    {
-      private readonly Models.PayloadformatterSettings _payloadformatterSettings;
-      private readonly BlobServiceClient _blobServiceClient;
+      private readonly Models.PayloadformatterSettings _payloadformatterSettings = payloadformatterSettings.Value;
+      private readonly BlobServiceClient _blobServiceClient = blobServiceClient;
 
       private readonly static LazyCache.CachingService _payloadFormatters = new CachingService();
-
-
-      public PayloadFormatterCache(IOptions<Models.PayloadformatterSettings> payloadformatterSettings, BlobServiceClient blobServiceClient)
-      {
-         _payloadformatterSettings = payloadformatterSettings.Value;
-         _blobServiceClient = blobServiceClient;
-      }
 
       public async Task<IFormatterUplink> UplinkGetAsync(string payloadFormatter, CancellationToken cancellationToken)
       {
