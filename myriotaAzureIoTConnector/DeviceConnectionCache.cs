@@ -36,28 +36,16 @@ using LazyCache;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   internal partial class DeviceConnectionCache : IDeviceConnectionCache
+   internal partial class DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IIoTHubDownlink ioTHubDownlink, IIoTCentralDownlink ioTCentralDownlink, IMyriotaModuleAPI myriotaModuleAPI) : IDeviceConnectionCache
    {
-      private readonly ILogger _logger;
-      private readonly Models.AzureIoT _azureIoTSettings;
-      private readonly Models.PayloadformatterSettings _payloadformatterSettings;
-      private readonly IPayloadFormatterCache _payloadFormatterCache;
-      private readonly IIoTHubDownlink _ioTHubDownlink;
-      private readonly IIoTCentralDownlink _ioTCentralDownlink;
-      private readonly IMyriotaModuleAPI _myriotaModuleAPI;
+      private readonly ILogger _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
+      private readonly Models.AzureIoT _azureIoTSettings = azureIoTSettings.Value;
+      private readonly Models.PayloadformatterSettings _payloadformatterSettings = payloadformatterSettings.Value;
+      private readonly IIoTHubDownlink _ioTHubDownlink = ioTHubDownlink;
+      private readonly IIoTCentralDownlink _ioTCentralDownlink = ioTCentralDownlink;
+      private readonly IMyriotaModuleAPI _myriotaModuleAPI = myriotaModuleAPI;
 
       private static readonly IAppCache _deviceConnectionCache = new CachingService();
-
-      public DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IPayloadFormatterCache payloadFormatterCache, IIoTHubDownlink ioTHubDownlink, IIoTCentralDownlink ioTCentralDownlink, IMyriotaModuleAPI myriotaModuleAPI)
-      {
-         _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
-         _azureIoTSettings = azureIoTSettings.Value;
-         _payloadformatterSettings = payloadformatterSettings.Value;
-         _payloadFormatterCache = payloadFormatterCache;
-         _ioTHubDownlink = ioTHubDownlink;
-         _ioTCentralDownlink = ioTCentralDownlink;
-         _myriotaModuleAPI = myriotaModuleAPI;
-      }
 
       public async Task<Models.DeviceConnectionContext> GetOrAddAsync(string terminalId, CancellationToken cancellationToken)
       {
