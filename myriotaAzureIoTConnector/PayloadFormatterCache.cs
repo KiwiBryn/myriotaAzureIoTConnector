@@ -34,7 +34,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       private readonly Models.PayloadformatterSettings _payloadformatterSettings;
       private readonly BlobServiceClient _blobServiceClient;
 
-      private readonly static IAppCache _payloadFormatters = new CachingService();
+      private readonly static LazyCache.CachingService _payloadFormatters = new CachingService();
 
 
       public PayloadFormatterCache(IOptions<Models.PayloadformatterSettings> payloadformatterSettings, BlobServiceClient blobServiceClient)

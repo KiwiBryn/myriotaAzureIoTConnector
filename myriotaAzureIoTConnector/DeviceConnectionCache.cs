@@ -45,7 +45,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       private readonly IIoTCentralDownlink _ioTCentralDownlink = ioTCentralDownlink;
       private readonly IMyriotaModuleAPI _myriotaModuleAPI = myriotaModuleAPI;
 
-      private static readonly IAppCache _deviceConnectionCache = new CachingService();
+      private static readonly LazyCache.CachingService _deviceConnectionCache = new CachingService();
 
       public async Task<Models.DeviceConnectionContext> GetOrAddAsync(string terminalId, CancellationToken cancellationToken)
       {
