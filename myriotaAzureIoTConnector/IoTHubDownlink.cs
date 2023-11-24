@@ -29,18 +29,11 @@ using PayloadFormatter;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   internal class IoTHubDownlink : IIoTHubDownlink
+   internal class IoTHubDownlink(ILogger<IoTHubDownlink> logger, IPayloadFormatterCache payloadFormatterCache, IMyriotaModuleAPI myriotaModuleAPI) : IIoTHubDownlink
    {
-      private readonly ILogger<IoTHubDownlink> _logger;
-      private readonly IPayloadFormatterCache _payloadFormatterCache;
-      private readonly IMyriotaModuleAPI _myriotaModuleAPI;
-
-      public IoTHubDownlink(ILogger<IoTHubDownlink> logger, IPayloadFormatterCache payloadFormatterCache, IMyriotaModuleAPI myriotaModuleAPI)
-      {
-         _logger = logger;
-         _payloadFormatterCache = payloadFormatterCache;
-         _myriotaModuleAPI = myriotaModuleAPI;
-      }
+      private readonly ILogger<IoTHubDownlink> _logger = logger;
+      private readonly IPayloadFormatterCache _payloadFormatterCache = payloadFormatterCache;
+      private readonly IMyriotaModuleAPI _myriotaModuleAPI = myriotaModuleAPI;
 
       public async Task AzureIoTHubMessageHandler(Message message, object userContext)
       {
