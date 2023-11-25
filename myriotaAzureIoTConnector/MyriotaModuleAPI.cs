@@ -44,11 +44,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
-            Models.ModulesResponse response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
+            Models.ModulesResponse? response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
 
-            if ((response == null) || (response.Items == null) || (response.Items.Count != 1)) 
+            if ((response is null) || (response.Items is null) || (response.Items.Count != 1)) 
             {
-               throw new ApplicationException($"MyriotaModuleAPI - GetAsync modudle:{TerminalId} not found");
+               throw new ApplicationException($"MyriotaModuleAPI - GetAsync module:{TerminalId} not found");
             }
 
             return response.Items[0];
