@@ -26,16 +26,10 @@ using Microsoft.Azure.Functions.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
  
  
-    public class StartUpService : BackgroundService
+    public class StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache) : BackgroundService
     {
-        private readonly ILogger<StartUpService> _logger;
-        private readonly IDeviceConnectionCache _deviceConnectionCache;
-
-        public StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache)
-        {
-            _logger = logger;
-            _deviceConnectionCache = deviceConnectionCache;
-        }
+        private readonly ILogger<StartUpService> _logger = logger;
+        private readonly IDeviceConnectionCache _deviceConnectionCache = deviceConnectionCache;
 
         protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
