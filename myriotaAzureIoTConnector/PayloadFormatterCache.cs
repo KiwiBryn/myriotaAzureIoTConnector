@@ -24,7 +24,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
    using Microsoft.Extensions.Options;
 
    using CSScriptLib;
-   using LazyCache;
 
    using PayloadFormatter;
 
@@ -34,7 +33,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       private readonly Models.PayloadformatterSettings _payloadformatterSettings = payloadformatterSettings.Value;
       private readonly BlobServiceClient _blobServiceClient = blobServiceClient;
 
-      private readonly static LazyCache.CachingService _payloadFormatters = new CachingService();
+      private readonly static LazyCache.CachingService _payloadFormatters = new();
 
       public async Task<IFormatterUplink> UplinkGetAsync(string payloadFormatter, CancellationToken cancellationToken)
       {
@@ -68,7 +67,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          return CSScript.Evaluator.LoadCode<PayloadFormatter.IFormatterDownlink>(downloadResult.Content.ToString());
       }
 
-      private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
+      private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new()
       {
          Priority = CacheItemPriority.NeverRemove
       };
