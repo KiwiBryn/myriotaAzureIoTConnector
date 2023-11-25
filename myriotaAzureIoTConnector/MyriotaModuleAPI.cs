@@ -26,14 +26,9 @@ using RestSharp;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   internal class MyriotaModuleAPI : IMyriotaModuleAPI
+   internal class MyriotaModuleAPI(IOptions<Models.MyriotaSettings> myiotaSettings) : IMyriotaModuleAPI
    {
-      private readonly Models.MyriotaSettings _myiotaSettings;
-
-      public MyriotaModuleAPI(IOptions<Models.MyriotaSettings> myiotaSettings)
-      {
-         _myiotaSettings = myiotaSettings.Value;
-      }
+      private readonly Models.MyriotaSettings _myiotaSettings = myiotaSettings.Value;
 
       public async Task<Models.Item> GetAsync(string TerminalId, CancellationToken cancellationToken)
       {
