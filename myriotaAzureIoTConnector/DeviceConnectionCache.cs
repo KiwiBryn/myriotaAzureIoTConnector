@@ -93,10 +93,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       private async Task<Models.DeviceConnectionContext> DeviceConnectionStringConnectAsync(string terminalId, Models.Item item, CancellationToken cancellationToken)
       {
-         if (item is null)
-         { 
-            item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
-         }
+         item ??= await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
 
          if (!item.Attributes.TryGetValue("DtdlModelId", out string? dtdlModelId))
          {
@@ -136,10 +133,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       private async Task<Models.DeviceConnectionContext> DeviceProvisioningServiceConnectAsync(string terminalId, Models.Item item, Models.AzureDeviceProvisioningService deviceProvisioningService, CancellationToken cancellationToken)
       {
-         if (item is null)
-         {
-            item = await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
-         }
+         item ??= await _myriotaModuleAPI.GetAsync(terminalId, cancellationToken);
 
          if (!item.Attributes.TryGetValue("DtdlModelId", out string? dtdlModelId))
          {
@@ -173,7 +167,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                    deviceProvisioningService.GlobalDeviceEndpoint,
                    deviceProvisioningService.IdScope,
                    securityProvider,
-               transport);
+transport);
 
                if (!string.IsNullOrEmpty(dtdlModelId))
                {
