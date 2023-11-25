@@ -13,21 +13,21 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
+using System.Threading;
+using System.Threading.Tasks;
+
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
+
+using CSScriptLib;
+
+using PayloadFormatter;
+
+
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   using System.Threading;
-   using System.Threading.Tasks;
-
-   using Azure.Storage.Blobs;
-   using Azure.Storage.Blobs.Models;
-   using Microsoft.Extensions.Caching.Memory;
-   using Microsoft.Extensions.Options;
-
-   using CSScriptLib;
-
-   using PayloadFormatter;
-
-
    public class PayloadFormatterCache(IOptions<Models.PayloadformatterSettings> payloadformatterSettings, BlobServiceClient blobServiceClient) : IPayloadFormatterCache
    {
       private readonly Models.PayloadformatterSettings _payloadformatterSettings = payloadformatterSettings.Value;
