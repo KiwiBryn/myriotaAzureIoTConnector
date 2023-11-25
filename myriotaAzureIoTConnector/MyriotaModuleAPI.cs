@@ -70,9 +70,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
-            Models.ModulesResponse response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
+            Models.ModulesResponse? response = await client.GetAsync<Models.ModulesResponse>(request, cancellationToken);
 
-            if ((response == null) || (response.Items == null) || (response.Items.Count == 0))
+            if ((response is null) || (response.Items is null))
             {
                throw new ApplicationException($"MyriotaModuleAPI - GetAsync no module list returned");
             }
@@ -105,9 +105,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
-               Models.ControlMessageSendResponse sendResponse = await client.PostAsync<Models.ControlMessageSendResponse>(request, cancellationToken);
+               Models.ControlMessageSendResponse? sendResponse = await client.PostAsync<Models.ControlMessageSendResponse>(request, cancellationToken);
 
-               return sendResponse.Id;
+               if (sendResponse is not null)
+               {
+                  return sendResponse.Id;
+               }
             }
          }
 
