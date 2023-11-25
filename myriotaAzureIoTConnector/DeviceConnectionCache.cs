@@ -31,8 +31,6 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
-using LazyCache;
-
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
@@ -160,14 +158,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          string deviceKey;
 
-         using (var hmac = new HMACSHA256(Convert.FromBase64String(deviceProvisioningService.GroupEnrollmentKey)))
+         using (HMACSHA256 hmac = new(Convert.FromBase64String(deviceProvisioningService.GroupEnrollmentKey)))
          {
             deviceKey = Convert.ToBase64String(hmac.ComputeHash(Encoding.UTF8.GetBytes(terminalId)));
          }
 
-         using (var securityProvider = new SecurityProviderSymmetricKey(terminalId, deviceKey, null))
+         using (SecurityProviderSymmetricKey securityProvider = new(terminalId, deviceKey, null))
          {
-            using (var transport = new ProvisioningTransportHandlerAmqp(TransportFallbackType.TcpOnly))
+            using (ProvisioningTransportHandlerAmqp transport = new(TransportFallbackType.TcpOnly))
             {
                DeviceRegistrationResult result;
 
