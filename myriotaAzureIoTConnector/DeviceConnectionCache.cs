@@ -45,7 +45,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
       private readonly IIoTCentralDownlink _ioTCentralDownlink = ioTCentralDownlink;
       private readonly IMyriotaModuleAPI _myriotaModuleAPI = myriotaModuleAPI;
 
-      private static readonly LazyCache.CachingService _deviceConnectionCache = new CachingService();
+      private static readonly LazyCache.CachingService _deviceConnectionCache = new();
 
       public async Task<Models.DeviceConnectionContext> GetOrAddAsync(string terminalId, CancellationToken cancellationToken)
       {
@@ -179,7 +179,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                if (!string.IsNullOrEmpty(dtdlModelId))
                {
-                  ProvisioningRegistrationAdditionalData provisioningRegistrationAdditionalData = new ProvisioningRegistrationAdditionalData()
+                  ProvisioningRegistrationAdditionalData provisioningRegistrationAdditionalData = new()
                   {
                      JsonData = PnpConvention.CreateDpsPayload(dtdlModelId)
                   };
@@ -232,7 +232,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
       }
 
-      private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new MemoryCacheEntryOptions()
+      private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new()
       {
          Priority = CacheItemPriority.NeverRemove
       };
