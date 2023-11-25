@@ -32,18 +32,11 @@ using PayloadFormatter;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   public class MyriotaUplinkMessageProcessor
+   public class MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IDeviceConnectionCache deviceConnectionCache, IPayloadFormatterCache payloadFormatterCache)
    {
-      private readonly ILogger _logger;
-      private readonly IDeviceConnectionCache _deviceConnectionCache;
-      private readonly IPayloadFormatterCache _payloadFormatterCache;
-
-      public MyriotaUplinkMessageProcessor(ILoggerFactory loggerFactory, IDeviceConnectionCache deviceConnectionCache, IPayloadFormatterCache payloadFormatterCache)
-      {
-         _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
-         _deviceConnectionCache = deviceConnectionCache;
-         _payloadFormatterCache = payloadFormatterCache;
-      }
+      private readonly ILogger _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
+      private readonly IDeviceConnectionCache _deviceConnectionCache = deviceConnectionCache;
+      private readonly IPayloadFormatterCache _payloadFormatterCache = payloadFormatterCache;
 
       [Function("UplinkMessageProcessor")]
       public async Task UplinkMessageProcessor([QueueTrigger(queueName: "%UplinkQueueName%", Connection = "UplinkQueueStorage")] Models.UplinkPayloadQueueDto payload, CancellationToken cancellationToken)
