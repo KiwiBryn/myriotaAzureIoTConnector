@@ -32,15 +32,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<Models.Item> GetAsync(string TerminalId, CancellationToken cancellationToken)
       {
-         RestClientOptions restClientOptions = new RestClientOptions()
+         RestClientOptions restClientOptions = new()
          {
             BaseUrl = new Uri(_myiotaSettings.BaseUrl),
             ThrowOnAnyError = true,
          };
 
-         using (RestClient client = new RestClient(restClientOptions))
+         using (RestClient client = new(restClientOptions))
          {
-            RestRequest request = new RestRequest($"v1/modules/{TerminalId}?Destinations=false");
+            RestRequest request = new($"v1/modules/{TerminalId}?Destinations=false");
 
             request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
@@ -57,16 +57,16 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<ICollection<Models.Item>> ListAsync(CancellationToken cancellationToken)
       {
-         RestClientOptions restClientOptions = new RestClientOptions()
+         RestClientOptions restClientOptions = new()
          {
             BaseUrl = new Uri(_myiotaSettings.BaseUrl),
             ThrowOnAnyError = true,
          };
 
          // Need to rewrite this to handle paging
-         using (RestClient client = new RestClient(restClientOptions))
+         using (RestClient client = new(restClientOptions))
          {
-            RestRequest request = new RestRequest("v1/modules?Destinations=false");
+            RestRequest request = new("v1/modules?Destinations=false");
 
             request.AddHeader("Authorization", _myiotaSettings.ApiToken);
 
@@ -83,13 +83,13 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<string> SendAsync(string terminalId, byte[] payload, CancellationToken cancellationToken = default)
       {
-         Models.ControlMessageSendRequest message = new Models.ControlMessageSendRequest()
+         Models.ControlMessageSendRequest message = new()
          {
             ModuleId = terminalId,
             Message = Convert.ToHexString(payload),
          };
 
-         RestClientOptions restClientOptions = new RestClientOptions()
+         RestClientOptions restClientOptions = new()
          {
             BaseUrl = new Uri(_myiotaSettings.BaseUrl),
             ThrowOnAnyError = true,
@@ -97,9 +97,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          if (_myiotaSettings.DownlinkEnabled)
          {
-            using (RestClient client = new RestClient(restClientOptions))
+            using (RestClient client = new(restClientOptions))
             {
-               RestRequest request = new RestRequest("v1/control-messages/", Method.Post);
+               RestRequest request = new("v1/control-messages/", Method.Post);
 
                request.AddJsonBody(JsonSerializer.Serialize(message));
 
