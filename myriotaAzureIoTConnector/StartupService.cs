@@ -13,19 +13,19 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 using Microsoft.Azure.Functions.Extensions.DependencyInjection;
 
-[assembly: FunctionsStartup(typeof(devMobile.IoT.MyriotaAzureIoTConnector.Connector.StartUpService))]
- namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
-{
-    using System;
-    using System.Threading;
-    using System.Threading.Tasks;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
-    using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Logging;
- 
- 
+
+[assembly: FunctionsStartup(typeof(devMobile.IoT.MyriotaAzureIoTConnector.Connector.StartUpService))]
+namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
+{
     public class StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache) : BackgroundService
     {
         private readonly ILogger<StartUpService> _logger = logger;
