@@ -60,7 +60,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // This shouldn't fail, but it could for lots of different reasons, invalid path to blob, syntax error, interface broken etc.
                IFormatterUplink formatter = await _payloadFormatterCache.UplinkGetAsync(context.PayloadFormatterUplink, cancellationToken);
 
-               Dictionary<string, string> properties = new Dictionary<string, string>();
+               Dictionary<string, string> properties = [];
 
                // This shouldn't fail, but it could for lots of different reasons, null references, divide by zero, out of range etc.
                JObject telemetryEvent = formatter.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
@@ -81,7 +81,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                _logger.LogInformation("Uplink- PayloadId:{Id} TerminalId:{TerminalId} Payload formatter:{PayloadFormatterUplink} TelemetryEvent:{telemetryEvent}", payload.Id, packet.TerminalId, context.PayloadFormatterUplink, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
 
-               using (Message ioTHubmessage = new Message(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
+               using (Message ioTHubmessage = new(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
                {
                   // This is so nasty but can't find a better way
                   foreach (var property in properties)
