@@ -65,7 +65,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                return;
             }
 
-            // Use default formatter and replace with method formatter if configured.
+            // Use default formatter unless method formatter configured.
             string payloadFormatterName;
             if (string.IsNullOrEmpty(method.Formatter))
             {
@@ -144,10 +144,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                _logger.LogError(aex, "Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} is not valid text", context.TerminalId, message.LockToken);
             }
 
-            if (messageJson is not null)
+            if (messageJson is null)
+            {
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken}", context.TerminalId, message.LockToken, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
+            }
+            else
             {
                _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Message JSON:{messageJson}", context.TerminalId, message.LockToken, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
             }
+
 
 
             // This shouldn't fail, but it could for lots of diffent reasons, invalid path to blob, syntax error, interface broken etc.
