@@ -194,7 +194,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          }
          catch (Exception ex)
          {
-            _logger.LogError(ex, "Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} MessageHandler processing failed", context.TerminalId, message.LockToken);
+            _logger.LogError(ex, "Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} processing failed", context.TerminalId, message.LockToken);
 
             await context.DeviceClient.RejectAsync(message);
          }
