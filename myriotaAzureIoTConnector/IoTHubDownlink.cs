@@ -112,7 +112,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
 
                // Finally send Control Message to device using the Myriota API
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} PayloadBytes:{payloadBytes} Length:{Length} sending", context.TerminalId, message.LockToken, BitConverter.ToSingle(payloadBytes), payloadBytes.Length);
+               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} LockToken:{LockToken} PayloadBytes:{payloadBytes} Length:{Length} sending", context.TerminalId, message.LockToken, BitConverter.ToString(payloadBytes), payloadBytes.Length);
 
                string messageId = await _myriotaModuleAPI.SendAsync(context.TerminalId, payloadBytes);
 
