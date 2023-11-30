@@ -45,9 +45,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // Replace default formatter with message specific formatter if configured.
                if (!message.Properties.TryGetValue(Constants.IoTHubDownlinkPayloadFormatterProperty, out string? payloadFormatterName) || string.IsNullOrEmpty(payloadFormatterName))
                {
-                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TermimalId} LockToken:{LockToken} Context formatter:{payloadFormatterName} ", context.TerminalId, message.LockToken, payloadFormatterName);
-
                   payloadFormatterName = context.PayloadFormatterDownlink;
+
+                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TermimalId} LockToken:{LockToken} Context formatter:{payloadFormatterName} ", context.TerminalId, message.LockToken, payloadFormatterName);
                }
                else
                {

@@ -72,15 +72,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                string payloadFormatterName;
                if (string.IsNullOrEmpty(method.Formatter))
                {
-                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Context Formatter:{Formatter}", context.TerminalId, message.LockToken, context.PayloadFormatterDownlink);
-
                   payloadFormatterName = context.PayloadFormatterDownlink;
+
+                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Context Formatter:{Formatter}", context.TerminalId, message.LockToken, context.PayloadFormatterDownlink);
                }
                else
                {
-                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Method Formatter:{Formatter}", context.TerminalId, message.LockToken, method.Formatter);
-
                   payloadFormatterName = method.Formatter;
+
+                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Method Formatter:{Formatter}", context.TerminalId, message.LockToken, method.Formatter);
                }
 
 
