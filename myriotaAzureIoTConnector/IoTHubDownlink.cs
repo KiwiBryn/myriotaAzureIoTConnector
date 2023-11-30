@@ -14,6 +14,7 @@
 //
 //---------------------------------------------------------------------------------
 using System;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -127,6 +128,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                await context.DeviceClient.RejectAsync(message);
             }
          }
+      }
+
+      public async Task<MethodResponse> IotHubMethodHandler(MethodRequest methodRequest, object userContext)
+      {
+         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
+
+         _logger.LogWarning("Downlink- TerminalId:{TerminalId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", context.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
+
+         return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
       }
    }
 }

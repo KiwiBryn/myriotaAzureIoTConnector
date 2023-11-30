@@ -72,19 +72,21 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
 
                await context.DeviceClient.SetReceiveMessageHandlerAsync(_ioTHubDownlink.AzureIoTHubMessageHandler, context, cancellationToken);
+
+               await context.DeviceClient.SetMethodDefaultHandlerAsync(_ioTHubDownlink.IotHubMethodHandler, context, cancellationToken);
                break;
             case Models.ApplicationType.IoTCentral:
                context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
 
                await context.DeviceClient.SetReceiveMessageHandlerAsync(_ioTCentralDownlink.AzureIoTCentralMessageHandler, context, cancellationToken);
+
+               await context.DeviceClient.SetMethodDefaultHandlerAsync(_ioTCentralDownlink.DefaultMethodHandler, context, cancellationToken);
                break;
             default:
                _logger.LogError("Uplink- Azure IoT ApplicationType unknown {ApplicationType}", _azureIoTSettings.ApplicationType);
 
                throw new NotImplementedException("AzureIoT Hub unsupported ApplicationType");
          }
-
-         await context.DeviceClient.SetMethodDefaultHandlerAsync(DefaultMethodHandler, context, cancellationToken);
 
          await context.DeviceClient.OpenAsync(cancellationToken);
 
@@ -213,15 +215,6 @@ transport);
 
             await this.GetOrAddAsync(item.Id, item, cancellationToken);
          }
-      }
-
-      private async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
-      {
-         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
-
-         _logger.LogWarning("Downlink- TerminalId:{TerminalId} DefaultMethodHandler name:{Name} payload:{DataAsJson}", context.TerminalId, methodRequest.Name, methodRequest.DataAsJson);
-
-         return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
       }
 
       private static readonly MemoryCacheEntryOptions memoryCacheEntryOptions = new()

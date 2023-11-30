@@ -23,5 +23,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
    public interface IIoTHubDownlink
    {
       public Task AzureIoTHubMessageHandler(Message message, object userContext);
+
+      public Task<MethodResponse> IotHubMethodHandler(MethodRequest methodRequest, object userContext);
    }
 }
