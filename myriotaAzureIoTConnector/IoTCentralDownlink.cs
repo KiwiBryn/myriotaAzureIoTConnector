@@ -156,8 +156,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
 
                // This will fail when with null references, divide by zero, out of range etc. when paylaod formatter code has issues
-               byte[] payloadBytes = payloadFormatter.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
-
+               byte[] payloadBytes = payloadFormatter.Evaluate(message.Properties, context.TerminalId, messageJson);
 
                // Validate payload before calling Myriota control message send API method
                if (payloadBytes is null)
@@ -201,7 +200,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
       {
-         return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
+         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
+
+         _logger.LogInformation("Downlink- IoT Central TerminalId:{TermimalId} Name:{Name} Payload bytes:{Data} Payload JSON:{DataAsJson}", context.TerminalId, methodRequest.Name, BitConverter.ToString(methodRequest.Data), methodRequest.DataAsJson);
+
+         return new MethodResponse((int)HttpStatusCode.BadRequest);
       }
    }
 }

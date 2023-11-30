@@ -15,17 +15,19 @@
 //---------------------------------------------------------------------------------
 namespace PayloadFormatter // Additional namespace for shortening interface when usage in formatter code
 {
-    using System.Collections.Generic;
+   using System.Collections.Generic;
 
-    using Newtonsoft.Json.Linq;
+   using Newtonsoft.Json.Linq;
 
-    public interface IFormatterUplink
-    {
-        public JObject Evaluate(IDictionary<string, string> properties, string terminalId, DateTime timestamp, byte[] payloadBytes);
-    }
+   public interface IFormatterUplink
+   {
+      public JObject Evaluate(IDictionary<string, string> properties, string terminalId, DateTime timestamp, byte[] payloadBytes);
+   }
 
-    public interface IFormatterDownlink
-    {
-        public byte[] Evaluate(IDictionary<string, string> properties, string terminalId, JObject? payloadJson, byte[] payloadBytes);
-    }
+   public interface IFormatterDownlink
+   {
+      public byte[] Evaluate(IDictionary<string, string> properties, string terminalId, JObject? payloadJson);
+
+      public byte[] Evaluate(string terminalId, JObject? payloadJson, byte[] payloadBytes);
+   }
 }
