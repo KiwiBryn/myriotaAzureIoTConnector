@@ -143,7 +143,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                if (messageJson is null)
                {
-                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken}", context.TerminalId, message.LockToken, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
+                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} Message JSON is null", context.TerminalId, message.LockToken);
                }
                else
                {

@@ -209,7 +209,7 @@ transport);
       {
          foreach (Models.Item item in await _myriotaModuleAPI.ListAsync(cancellationToken))
          {
-            _logger.LogInformation("Myriota TerminalId:{TerminalId}", item.Id);
+            _logger.LogInformation("Myriota TerminalId:{TerminalId} cache", item.Id);
 
             await this.GetOrAddAsync(item.Id, item, cancellationToken);
          }
