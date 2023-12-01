@@ -26,6 +26,6 @@ namespace PayloadFormatter // Additional namespace for shortening interface when
 
     public interface IFormatterDownlink
     {
-      public byte[] Evaluate(IDictionary<string, string> properties, string terminalId, JObject? payloadJson, byte[] payloadBytes);
+      public byte[] Evaluate(string terminalId, IDictionary<string, string> properties, JObject? payloadJson, byte[] payloadBytes);
    }
 }

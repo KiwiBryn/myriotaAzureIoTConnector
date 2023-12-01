@@ -156,7 +156,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
 
                // This will fail when with null references, divide by zero, out of range etc. when paylaod formatter code has issues
-               byte[] payloadBytes = payloadFormatter.Evaluate(message.Properties, context.TerminalId, messageJson, messageBytes);
+               byte[] payloadBytes = payloadFormatter.Evaluate(context.TerminalId, message.Properties, messageJson, messageBytes);
 
 
                // Validate payload before calling Myriota control message send API method
