@@ -63,7 +63,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                Dictionary<string, string> properties = [];
 
                // This shouldn't fail, but it could for lots of different reasons, null references, divide by zero, out of range etc.
-               JObject telemetryEvent = formatter.Evaluate(properties, packet.TerminalId, packet.Timestamp, payloadBytes);
+               JObject telemetryEvent = formatter.Evaluate(packet.TerminalId, properties, packet.Timestamp, payloadBytes);
                if (telemetryEvent is null)
                {
                   _logger.LogWarning("Uplink- TerminalId:{TerminalId} PayloadId:{Id} Payload formatter:{PayloadFormatterUplink} Value:{Value} evaluate failed returned null", packet.TerminalId, payload.Id, context.PayloadFormatterUplink, packet.Value);
