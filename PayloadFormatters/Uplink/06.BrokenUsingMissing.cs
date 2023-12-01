@@ -6,11 +6,11 @@ using Newtonsoft.Json.Linq;
 
 public class FormatterUplink : PayloadFormatter.IFormatterUplink
 {
-    public JObject Evaluate(IDictionary<string, string> properties, string terminalId, DateTime timestamp, byte[] payloadBytes)
+    public JObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
     {
         JObject telemetryEvent = new JObject();
 
-        //telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
+        telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
 
         return telemetryEvent;
     }
