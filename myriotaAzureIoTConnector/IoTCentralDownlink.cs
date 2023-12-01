@@ -156,7 +156,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
 
                // This will fail when with null references, divide by zero, out of range etc. when paylaod formatter code has issues
-               byte[] payloadBytes = payloadFormatter.Evaluate(context.TerminalId, message.Properties, messageJson, messageBytes);
+               byte[] payloadBytes = payloadFormatter.Evaluate(context.TerminalId, message.Properties, messageJson);
 
 
                // Validate payload before calling Myriota control message send API method
@@ -201,7 +201,132 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext)
       {
-         return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Myriota Connector does not support Direct Methods.\"}"), (int)HttpStatusCode.BadRequest);
+         Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
+         string requestId = Guid.NewGuid().ToString();
+
+         _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Method name:{Name}", context.TerminalId, requestId, methodRequest.Name);
+
+
+         try
+         {
+            // Look up the method settings to get the option payload formatter and downlink message payload JSON.
+            if ((_azureIoTSettings.IoTCentral.Methods == null) || !_azureIoTSettings.IoTCentral.Methods.TryGetValue(methodRequest.Name, out Models.AzureIoTCentralMethod? method))
+            {
+               _logger.LogWarning("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Method name:{methodName} has no settings", context.TerminalId, requestId, methodRequest.Name);
+
+               return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Direct Methodxxxxxxxxxxxxxxxxxxxxxxxxxxx.\"}"), (int)HttpStatusCode.BadRequest);
+            }
+
+            // Use default formatter unless method formatter configured.
+            string payloadFormatterName;
+            if (string.IsNullOrEmpty(method.Formatter))
+            {
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Context Formatter:{Formatter}", context.TerminalId, requestId, context.PayloadFormatterDownlink);
+
+               payloadFormatterName = context.PayloadFormatterDownlink;
+            }
+            else
+            {
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Method Formatter:{Formatter}", context.TerminalId, requestId, method.Formatter);
+
+               payloadFormatterName = method.Formatter;
+            }
+
+
+            // Get the message as bytes 
+            _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Message:{messageBytes}", context.TerminalId, requestId, BitConverter.ToString(methodRequest.Data));
+
+            // The payload has Data (array bytes) and DataAsJson (string)
+            JObject? messageJson = null;
+
+            // special case for for "empty" payload
+            if (methodRequest.DataAsJson == "@")
+            {
+               // If the method payload in the application configuration is broken nothing can be done
+               try
+               {
+                  messageJson = JObject.Parse(method.Payload);
+               }
+               catch (JsonReaderException jex)
+               {
+                  _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} RequestID:{requestId} invalid Method.Payload:{method.Payload} ", context.TerminalId, requestId, method.Payload);
+
+                  return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Direct Methodxxxxxxxxxxxxxxxxxxxxxxxxxxx.\"}"), (int)HttpStatusCode.BadRequest);
+               }
+            }
+            else
+            {
+               // See if the message payload is valid JSON e.g. an object, vector etc.
+               try
+               {
+                  messageJson = JObject.Parse(methodRequest.DataAsJson);
+               }
+               catch (JsonReaderException)
+               {
+                  // See if the message text is a valid property value e.g. enumeration, number, boolean etc.
+                  try
+                  {
+                     messageJson = new JObject(new JProperty(methodRequest.Name, JProperty.Parse(methodRequest.DataAsJson)));
+                  }
+                  catch (JsonException)
+                  {
+                     // if not it must be a property e.g. a string value WARNING - That doesn't look like valid JSON
+                     messageJson = new JObject(new JProperty(methodRequest.Name, methodRequest.DataAsJson));
+                  }
+               }
+            }
+
+            if (messageJson is null)
+            {
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Message JSON is null", context.TerminalId, requestId);
+            }
+            else
+            {
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Message JSON:{messageJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
+            }
+
+
+            // This shouldn't fail, but it could for lots of diffent reasons, invalid path to blob, syntax error, interface broken etc.
+            IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
+
+            // This will fail when with null references, divide by zero, out of range etc. when paylaod formatter code has issues
+            byte[] payloadBytes = payloadFormatter.Evaluate(context.TerminalId, messageJson);
+
+
+            // Validate payload before calling Myriota control message send API method
+            if (payloadBytes is null)
+            {
+               _logger.LogWarning("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Evaluate returned null", context.TerminalId, requestId);
+
+               return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Direct Methodxxxxxxxxxxxxxxxxxxxxxxxxxxx.\"}"), (int)HttpStatusCode.BadRequest);
+            }
+
+            if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
+            {
+               _logger.LogWarning("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Payload:{payloadBytes} length:{length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
+
+               return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Direct Methodxxxxxxxxxxxxxxxxxxxxxxxxxxx.\"}"), (int)HttpStatusCode.BadRequest);
+            }
+
+            _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Payload:{payloadBytes} Length:{length}", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length);
+
+
+            // Finally send the message using Myriota API
+            _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} sending", context.TerminalId, requestId);
+
+            string messageId = await _myriotaModuleAPI.SendAsync(context.TerminalId, payloadBytes);
+
+            _logger.LogInformation("Downlink- IoT Central TerminalID:{terminalId} RequestID:{requestId} MessageID:{messageId} sent", context.TerminalId, requestId, messageId);
+         }
+         catch (Exception ex)
+         {
+            _logger.LogError(ex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} processing failed", context.TerminalId, requestId);
+
+            return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Direct Methodxxxxxxxxxxxxxxxxxxxxxxxxxxx.\"}"), (int)HttpStatusCode.OK);
+
+         }
+
+         return new MethodResponse(Encoding.ASCII.GetBytes("{\"message\":\"The Direct Methodxxxxxxxxxxxxxxxxxxxxxxxxxxx.\"}"), (int)HttpStatusCode.OK);
       }
    }
 }

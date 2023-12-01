@@ -56,6 +56,15 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
       public string ConnectionString { get; set; } = string.Empty;
 
       public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
+
+      public Dictionary<string, AzureIoTHublMethod> Methods { get; set; }
+   }
+
+   public class AzureIoTHublMethod
+   {
+      public string Formatter { get; set; } = string.Empty;
+
+      public string Payload { get; set; } = string.Empty;
    }
 
    public class AzureIoTCentral

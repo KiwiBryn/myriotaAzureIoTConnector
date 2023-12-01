@@ -26,6 +26,12 @@ namespace PayloadFormatter // Additional namespace for shortening interface when
 
     public interface IFormatterDownlink
     {
-      public byte[] Evaluate(string terminalId, IDictionary<string, string> properties, JObject? payloadJson, byte[] payloadBytes);
+      public byte[] Evaluate(string terminalId, IDictionary<string, string> properties, JObject? payloadJson); //IoT C Message
+
+      //public byte[] Evaluate(string terminalId, JObject? payloadJson); // Iot C method
+
+      public byte[] Evaluate(string terminalId, IDictionary<string, string> properties, JObject? payloadJson, byte[] payloadBytes); // IoT Hub message
+
+      //public byte[] Evaluate(string terminalId, JObject? payloadJson, byte[] payloadBytes); //IoT Hub method
    }
 }
