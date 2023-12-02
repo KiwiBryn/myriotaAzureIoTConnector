@@ -22,8 +22,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
    public interface IIoTCentralDownlink
    {
-      public Task AzureIoTCentralMessageHandler(Message message, object userContext);
-
       public Task<MethodResponse> DefaultMethodHandler(MethodRequest methodRequest, object userContext);
 
    }
