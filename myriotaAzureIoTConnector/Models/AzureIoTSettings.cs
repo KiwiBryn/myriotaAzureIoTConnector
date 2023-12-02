@@ -47,7 +47,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
       DeviceConnectionString,
       DeviceProvisioningService
    }
-
+   
    public class AzureIotHub
    {
       [JsonConverter(typeof(StringEnumConverter))]
@@ -57,14 +57,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 
       public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
 
-      public Dictionary<string, AzureIoTHublMethod> Methods { get; set; }
-   }
-
-   public class AzureIoTHublMethod
-   {
-      public string Formatter { get; set; } = string.Empty;
-
-      public string Payload { get; set; } = string.Empty;
+      public Dictionary<string, string> Formatters { get; set; }
    }
 
    public class AzureIoTCentral

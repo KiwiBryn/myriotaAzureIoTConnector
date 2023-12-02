@@ -71,8 +71,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                      throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
                }
 
-               await context.DeviceClient.SetReceiveMessageHandlerAsync(_ioTHubDownlink.AzureIoTHubMessageHandler, context, cancellationToken);
-
                await context.DeviceClient.SetMethodDefaultHandlerAsync(_ioTHubDownlink.IotHubMethodHandler, context, cancellationToken);
                break;
             case Models.ApplicationType.IoTCentral:
@@ -169,7 +167,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                    deviceProvisioningService.GlobalDeviceEndpoint,
                    deviceProvisioningService.IdScope,
                    securityProvider,
-transport);
+                   transport);
 
                if (!string.IsNullOrEmpty(dtdlModelId))
                {
