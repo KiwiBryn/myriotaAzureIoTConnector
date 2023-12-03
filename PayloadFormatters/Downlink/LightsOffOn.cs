@@ -6,7 +6,7 @@ using Newtonsoft.Json.Linq;
 
 public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
 {
-   public byte[] Evaluate(string terminalId, IDictionary<string, string> properties, JObject payloadJson, byte[] payloadBytes)
+   public byte[] Evaluate(string terminalId, JObject payloadJson, byte[] payloadBytes)
    {
       bool? light = payloadJson.Value<bool?>("Light");
 
