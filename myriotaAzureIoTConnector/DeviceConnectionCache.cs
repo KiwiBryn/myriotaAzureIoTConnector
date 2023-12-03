@@ -76,8 +76,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             case Models.ApplicationType.IoTCentral:
                context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
 
-               await context.DeviceClient.SetReceiveMessageHandlerAsync(_ioTCentralDownlink.AzureIoTCentralMessageHandler, context, cancellationToken);
-
                await context.DeviceClient.SetMethodDefaultHandlerAsync(_ioTCentralDownlink.DefaultMethodHandler, context, cancellationToken);
                break;
             default:
