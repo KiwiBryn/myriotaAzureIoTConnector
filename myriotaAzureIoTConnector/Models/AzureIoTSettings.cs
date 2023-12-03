@@ -14,6 +14,7 @@
 // limitations under the License.
 //
 //---------------------------------------------------------------------------------
+using System;
 using System.Collections.Generic;
 
 using Newtonsoft.Json;
@@ -47,7 +48,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
       DeviceConnectionString,
       DeviceProvisioningService
    }
-   
+
+   public class CaseInsensitiveDictionary<T> : Dictionary<string, T>
+   {
+      public CaseInsensitiveDictionary() : base(StringComparer.OrdinalIgnoreCase)
+      {
+      }
+   }
+
    public class AzureIotHub
    {
       [JsonConverter(typeof(StringEnumConverter))]
@@ -57,14 +65,21 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 
       public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
 
-      public Dictionary<string, string> Formatters { get; set; }
+      public CaseInsensitiveDictionary<AzureIoTHubMethod> Methods { get; set; }
+   }
+
+   public class AzureIoTHubMethod
+   {
+      public string Formatter { get; set; } = string.Empty;
+
+      public string Payload { get; set; } = string.Empty;
    }
 
    public class AzureIoTCentral
    {
       public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
 
-      public Dictionary<string, AzureIoTCentralMethod> Methods { get; set; }
+      public CaseInsensitiveDictionary<AzureIoTCentralMethod> Methods { get; set; }
    }
 
    public class AzureIoTCentralMethod
