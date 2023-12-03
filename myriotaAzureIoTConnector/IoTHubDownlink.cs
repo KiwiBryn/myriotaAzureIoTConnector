@@ -45,7 +45,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             _logger.LogWarning("Downlink- TerminalId:{TerminalId} RequestId:{requestId} Name:{Name}", context.TerminalId, requestId, methodRequest.Name);
 
-            // If not method specific payload 
+            // Lookup payload formatter name, none specified use context one which is from device attributes or the default in configuration
             if (_azureIoTSettings.IoTHub.Formatters.TryGetValue(methodRequest.Name, out string? payloadFormatterName) && !string.IsNullOrEmpty(payloadFormatterName))
             {
                _logger.LogInformation("Downlink- IoT Hub TerminalID:{TermimalId} RequestID:{requestId} Method name formatter:{payloadFormatterName} ", context.TerminalId, requestId, payloadFormatterName);
@@ -70,14 +70,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
             catch (JsonReaderException jex)
             {
-               _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
+               _logger.LogWarning(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
             }
 
 
             // This "shouldn't" fail, but it could for invalid path to blob, timeout retrieving blob, payload formatter syntax error etc.
             IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
 
-            // This "shouldn't" fail, but the payload formatters can throw runtime exceptions like null reference, divide by zero, index out of range etc.
+            // This also "shouldn't" fail, but the payload formatters can throw runtime exceptions like null reference, divide by zero, index out of range etc.
             byte[] payloadBytes = payloadFormatter.Evaluate(context.TerminalId, methodRequest.Name, requestJson, methodRequest.Data);
 
             // Validate payload before calling Myriota control message send API method
@@ -90,7 +90,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
             {
-               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
+               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, .ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength); ;
 
                return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"RequestID:{requestId} payload evaluation length invalid.\""), (int)HttpStatusCode.UnprocessableEntity);
             }
@@ -104,7 +104,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          }
          catch (Exception ex)
          {
-            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} IotHubMethodHandler processing failed", context.TerminalId, requestId);
+            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} IotHubMethodHandler processing failed", context.TerminalId, requestId);
 
             return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} method handler failed.\""), (int)HttpStatusCode.InternalServerError);
          }
