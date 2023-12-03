@@ -25,6 +25,9 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.DownlinkPayloadFormatterTestHar
         [Option('t', "TerminalId", Required = true, HelpText = "Terminal unique identitifer")]
         public string TerminalId { get; set; }
 
+        [Option('m', "MethodName", Required = true, HelpText = "Method name")]
+        public string MethodName { get; set; }
+
         [Option('j', "JSONFile", Required = false, HelpText = "JSON payload file path")]
         public string JsonPayloadPath { get; set; }
 
