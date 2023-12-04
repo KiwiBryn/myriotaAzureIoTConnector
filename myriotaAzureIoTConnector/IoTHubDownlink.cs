@@ -36,7 +36,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<MethodResponse> IotHubMethodHandler(MethodRequest methodRequest, object userContext)
       {
-         // DIY message identifier so processing progress can be tracked in Application Insights
+         // DIY request identifier so processing progress can be tracked in Application Insights
          string requestId = Guid.NewGuid().ToString();
 
          Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
