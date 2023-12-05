@@ -10,6 +10,8 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
    {
       JObject telemetryEvent = new JObject();
 
+      properties.Add("iothub-creation-time-utc", timestamp.ToString("s", CultureInfo.InvariantCulture));
+
       if (payloadBytes is null)
       {
          return telemetryEvent;
