@@ -6,12 +6,19 @@ using Newtonsoft.Json.Linq;
 
 public class FormatterUplink : PayloadFormatter.IFormatterUplink
 {
-    public JObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
-    {
-        JObject telemetryEvent = new JObject();
+   public JObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
+   {
+      JObject telemetryEvent = new JObject();
 
-        telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
+      properties.Add("iothub-creation-time-utc", timestamp.ToString("s", CultureInfo.InvariantCulture));
 
-        return telemetryEvent;
-    }
+      if (payloadBytes is null)
+      {
+         return telemetryEvent;
+      }
+
+      telemetryEvent.Add("PayloadBytes", BitConverter.ToString(payloadBytes));
+
+      return telemetryEvent;
+   }
 }
