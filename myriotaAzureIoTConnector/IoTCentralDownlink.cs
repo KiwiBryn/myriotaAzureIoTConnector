@@ -45,9 +45,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             _logger.LogWarning("Downlink- TerminalId:{TerminalId} RequestId:{requestId} Name:{Name}", context.TerminalId, requestId, methodRequest.Name);
 
-            // If not method specific payload 
+            // Lookup payload formatter name, none specified use context one which is from device attributes or the default in configuration
             string payloadFormatterName;
-            if (_azureIoTSettings.IoTCentral.Methods.TryGetValue(methodRequest.Name, out Models.AzureIoTCentralMethod method) && !string.IsNullOrEmpty(method.Formatter))
+            if (_azureIoTSettings.IoTCentral.Methods.TryGetValue(methodRequest.Name, out Models.AzureIoTCentralMethod? method) && !string.IsNullOrEmpty(method.Formatter))
             {
                payloadFormatterName = method.Formatter;
 
@@ -88,7 +88,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                {
                   _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} method-name:{methodName} invalid Method.Payload:{method.Payload} ", context.TerminalId, requestId, methodRequest.Name, method.Payload);
 
-                  return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"RequestID:{requestId} payload evaluation length invalid.\""), (int)HttpStatusCode.UnprocessableEntity);
+                  return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluation length invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
                }
             }
             else
@@ -133,14 +133,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} Request:{requestId} Evaluate returned null", context.TerminalId, requestId);
 
-               return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"RequestID:{requestId} payload evaluate returned null.\""), (int)HttpStatusCode.UnprocessableEntity);
+               return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluate returned null.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }
 
             if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
             {
                _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
-               return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"RequestID:{requestId} payload evaluation length invalid.\""), (int)HttpStatusCode.UnprocessableEntity);
+               return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluation length invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }
 
             // Finally send Control Message to device using the Myriota API
@@ -154,7 +154,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} IotHubMethodHandler processing failed", context.TerminalId, requestId);
 
-            return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} method handler failed.\""), (int)HttpStatusCode.InternalServerError);
+            return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} method handler failed.\"}}"), (int)HttpStatusCode.InternalServerError);
          }
 
          return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} Message sent successfully.\"}}"), (int)HttpStatusCode.OK);

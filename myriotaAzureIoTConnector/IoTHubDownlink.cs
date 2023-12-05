@@ -36,7 +36,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
       public async Task<MethodResponse> IotHubMethodHandler(MethodRequest methodRequest, object userContext)
       {
-         // DIY message identifier so processing progress can be tracked in Application Insights
+         // DIY request identifier so processing progress can be tracked in Application Insights
          string requestId = Guid.NewGuid().ToString();
 
          Models.DeviceConnectionContext context = (Models.DeviceConnectionContext)userContext;
@@ -46,9 +46,12 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             _logger.LogWarning("Downlink- TerminalId:{TerminalId} RequestId:{requestId} Name:{Name}", context.TerminalId, requestId, methodRequest.Name);
 
             // Lookup payload formatter name, none specified use context one which is from device attributes or the default in configuration
-            if (_azureIoTSettings.IoTHub.Formatters.TryGetValue(methodRequest.Name, out string? payloadFormatterName) && !string.IsNullOrEmpty(payloadFormatterName))
+            string payloadFormatterName;
+            if (_azureIoTSettings.IoTHub.Methods.TryGetValue(methodRequest.Name, out Models.AzureIoTHubMethod? method) && !string.IsNullOrEmpty(method.Formatter))
             {
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TermimalId} RequestID:{requestId} Method name formatter:{payloadFormatterName} ", context.TerminalId, requestId, payloadFormatterName);
+               payloadFormatterName = method.Formatter;
+
+               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TermimalId} RequestID:{requestId} Method formatter:{payloadFormatterName} ", context.TerminalId, requestId, payloadFormatterName);
             }
             else
             {
@@ -64,13 +67,24 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             JObject? requestJson = null;
             try
             {
-               requestJson = JObject.Parse(methodRequest.DataAsJson);
+               if (string.IsNullOrEmpty(method.Payload))
+               { 
+                  requestJson = JObject.Parse(methodRequest.DataAsJson);
 
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} JSON:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(requestJson, Formatting.Indented));
+                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(requestJson, Formatting.Indented));
+               }
+               else
+               {
+                  requestJson = JObject.Parse(method.Payload);
+
+                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Payload:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(requestJson, Formatting.Indented));
+               }
             }
             catch (JsonReaderException jex)
             {
-               _logger.LogWarning(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
+               _logger.LogWarning(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson/Payload is not valid JSON", context.TerminalId, requestId);
+
+               return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload is not valid JSON.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }
 
 
@@ -85,14 +99,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} Request:{requestId} Evaluate returned null", context.TerminalId, requestId);
 
-               return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"RequestID:{requestId} payload evaluate returned null.\""), (int)HttpStatusCode.UnprocessableEntity);
+               return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluate returned null.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }
 
             if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
             {
                _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength); ;
 
-               return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"RequestID:{requestId} payload evaluation length invalid.\""), (int)HttpStatusCode.UnprocessableEntity);
+               return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluation length invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }
 
             // Finally send Control Message to device using the Myriota API
@@ -106,7 +120,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} IotHubMethodHandler processing failed", context.TerminalId, requestId);
 
-            return new MethodResponse(Encoding.ASCII.GetBytes($"\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} method handler failed.\""), (int)HttpStatusCode.InternalServerError);
+            return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} method handler failed.\"}}"), (int)HttpStatusCode.InternalServerError);
          }
 
          return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} Message sent successfully.\"}}"), (int)HttpStatusCode.OK);
