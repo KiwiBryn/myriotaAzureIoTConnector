@@ -8,6 +8,6 @@ public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
 {
    public byte[] Evaluate(string terminalId, string methodName, JObject payloadJson, byte[] payloadBytes)
    {
-      return payloadBytes
+      return payloadBytes;
    }
 }
