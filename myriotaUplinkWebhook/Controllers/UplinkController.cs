@@ -25,78 +25,83 @@ using Microsoft.Extensions.Logging;
 
 namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controllers
 {
-    [Route("[controller]")]
-    [ApiController]
-    public class UplinkController : ControllerBase
-    {
-        private readonly ILogger<UplinkController> _logger;
-        private readonly QueueServiceClient _queueServiceClient;
+   [Route("[controller]")]
+   [ApiController]
+   public class UplinkController : ControllerBase
+   {
+      private readonly ILogger<UplinkController> _logger;
+      private readonly QueueServiceClient _queueServiceClient;
 
-        public UplinkController(QueueServiceClient queueServiceClient, ILogger<UplinkController> logger)
-        {
-            _queueServiceClient = queueServiceClient;
-            _logger = logger;
-        }
+      public UplinkController(QueueServiceClient queueServiceClient, ILogger<UplinkController> logger)
+      {
+         _queueServiceClient = queueServiceClient;
+         _logger = logger;
+      }
 
-        [HttpPost()]
-        public async Task<IActionResult> Post([FromBody] Models.UplinkPayloadWebDto payloadWeb)
-        {
+      [HttpPost()]
+      public async Task<IActionResult> Post([FromBody] Models.UplinkPayloadWebDto payloadWeb)
+      {
+         // included payload ID for correlation as uplink message processed
+         _logger.LogInformation("Uplink- Payload ID:{Id}", payloadWeb.Id);
+
+         try
+         {
+            // Could of used AutoMapper but didn't seem worth it for one place
+            Models.UplinkPayloadQueueDto payloadQueue = new Models.UplinkPayloadQueueDto
+            {
+               EndpointRef = payloadWeb.EndpointRef,
+               PayloadReceivedAtUtc = DateTime.UnixEpoch.AddSeconds(payloadWeb.Timestamp),
+               PayloadArrivedAtUtc = DateTime.UtcNow,
+               Id = payloadWeb.Id,
+               Data = new Models.QueueData
+               {
+                  Packets = new System.Collections.Generic.List<Models.QueuePacket>()
+               },
+               CertificateUrl = new Uri(payloadWeb.CertificateUrl),
+               Signature = payloadWeb.Signature
+            };
+
+            Models.WebData webData;
+
+            // special case for broken payload in payloadWeb.Data
             try
             {
-                // Could of used AutoMapper but didn't seem worth it for one place
-                Models.UplinkPayloadQueueDto payloadQueue = new Models.UplinkPayloadQueueDto
-                {
-                    EndpointRef = payloadWeb.EndpointRef,
-                    PayloadReceivedAtUtc = DateTime.UnixEpoch.AddSeconds(payloadWeb.Timestamp),
-                    PayloadArrivedAtUtc = DateTime.UtcNow,
-                    Id = payloadWeb.Id,
-                    Data = new Models.QueueData
-                    {
-                        Packets = new System.Collections.Generic.List<Models.QueuePacket>()
-                    },
-                    CertificateUrl = new Uri(payloadWeb.CertificateUrl),
-                    Signature = payloadWeb.Signature
-                };
-
-                Models.WebData webData;
-
-                // special case for broken payload in payloadWeb.Data
-                try
-                {
-                    webData = JsonSerializer.Deserialize<Models.WebData>(payloadWeb.Data);
-                }
-                catch( JsonException jex)
-                {                     
-                    _logger.LogError(jex, "UplinkController.Post JsonException Deserialising payloadWeb.Data");
-
-                    return this.BadRequest("JsonException Deserialising payloadWeb.Data");
-                }
-
-                foreach (var packet in webData.Packets)
-                {
-                    payloadQueue.Data.Packets.Add(new Models.QueuePacket()
-                    {
-                        TerminalId = packet.TerminalId,
-                        Timestamp = DateTime.UnixEpoch.AddMilliseconds(packet.Timestamp),
-                        Value = packet.Value
-                    });
-                }
-
-                // included payload ID for correlation as uplink message processed
-                _logger.LogInformation("SendAsync payload ID:{Id}", payloadWeb.Id);
-
-                QueueClient queueClient = _queueServiceClient.GetQueueClient("uplink");
-
-                await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadQueue)));
+               webData = JsonSerializer.Deserialize<Models.WebData>(payloadWeb.Data);
             }
-            catch (Exception ex)
+            catch (JsonException jex)
             {
-               _logger.LogError(ex, "UplinkController.Post failed");
+               _logger.LogError(jex, "UplinkController.Post JsonException Deserialising payloadWeb.Data");
 
-                return this.StatusCode(500);
+               return this.BadRequest("JsonException Deserialising payloadWeb.Data");
             }
 
-            return this.Ok();
-        }
-    }
+            foreach (var packet in webData.Packets)
+            {
+               payloadQueue.Data.Packets.Add(new Models.QueuePacket()
+               {
+                  TerminalId = packet.TerminalId,
+                  Timestamp = DateTime.UnixEpoch.AddMilliseconds(packet.Timestamp),
+                  Value = packet.Value
+               });
+
+               _logger.LogInformation("Uplink- TerminalId:{TerminalId} PayloadId:{Id} TelemetryEvent:{telemetryEvent} Sending", packet.TerminalId, payloadWeb.Id, JsonSerializer.Serialize(packet));
+            }
+
+            QueueClient queueClient = _queueServiceClient.GetQueueClient("uplink");
+
+            await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadQueue)));
+
+            // included payload ID for correlation as uplink message processed
+            _logger.LogInformation("SendAsync payload ID:{Id} sent", payloadWeb.Id);
+         }
+         catch (Exception ex)
+         {
+            _logger.LogError(ex, "Uplink- Controller POST failed");
+
+            return this.StatusCode(500);
+         }
+
+         return this.Ok();
+      }
+   }
 }
