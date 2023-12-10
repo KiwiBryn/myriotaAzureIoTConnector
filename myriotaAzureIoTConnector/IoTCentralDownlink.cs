@@ -63,21 +63,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             // Display methodRequest.Data as Hex
             _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Data:{Data}", context.TerminalId, requestId, BitConverter.ToString(methodRequest.Data));
 
-            // Try converting the methodRequest.DataAsJson to JObject
-            JObject? messageJson = null;
-            try
-            {
-               messageJson = JObject.Parse(methodRequest.DataAsJson);
 
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} JSON:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
-            }
-            catch (JsonReaderException jex)
-            {
-               _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
-            }
+            JObject? messageJson = null;
 
             // special case for for "empty" payload
-            if (methodRequest.DataAsJson == "@")
+            if (String.IsNullOrWhiteSpace(methodRequest.DataAsJson) || (string.Compare(methodRequest.DataAsJson, "null", true) == 0))
             {
                // If the method payload in the application configuration is broken nothing can be done
                try
@@ -100,18 +90,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
                catch (JsonReaderException)
                {
-                  // See if the message text is a valid property value e.g. enumeration, number, boolean etc.
-                  try
-                  {
-                     messageJson = new JObject(new JProperty(methodRequest.Name, JProperty.Parse("messageText")));
-                  }
-                  catch (JsonException)
-                  {
-                     // if not it must be a property e.g. a string value WARNING - That doesn't look like valid JSON
-                     messageJson = new JObject(new JProperty("methodName", "messageText"));
-                  }
+                  messageJson = new JObject(new JProperty(methodRequest.Name, JToken.Parse(methodRequest.DataAsJson)));
                }
+
             }
+
 
             if (messageJson is null)
             {
@@ -138,7 +121,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
             {
-               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
+               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
                return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluation length invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }
