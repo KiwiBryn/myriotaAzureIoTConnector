@@ -76,9 +76,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
                catch (JsonReaderException jex)
                {
-                  _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} LockToken:{lockToken} method-name:{methodName} invalid Method.Payload:{method.Payload} ", context.TerminalId, requestId, methodRequest.Name, method.Payload);
+                  _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} method-name:{methodName} invalid Method.Payload:{method.Payload}", context.TerminalId, requestId, methodRequest.Name, method.Payload);
 
-                  return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluation length invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
+                  return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} method payload invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
                }
             }
             else
@@ -121,7 +121,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
             {
-               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
+               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} PayloadBytes:{payloadBytes} length:{Length} invalid, must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength);
 
                return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluation length invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }
@@ -135,7 +135,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          }
          catch (Exception ex)
          {
-            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{TerminalId} MessageID:{messageId} IotHubMethodHandler processing failed", context.TerminalId, requestId);
+            _logger.LogError(ex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} IotHubMethodHandler processing failed", context.TerminalId, requestId);
 
             return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"TerminalID:{context.TerminalId} RequestID:{requestId} method handler failed.\"}}"), (int)HttpStatusCode.InternalServerError);
          }
