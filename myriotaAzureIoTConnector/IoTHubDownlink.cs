@@ -43,7 +43,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          try
          {
-            _logger.LogWarning("Downlink- TerminalId:{TerminalId} RequestId:{requestId} Name:{Name}", context.TerminalId, requestId, methodRequest.Name);
+            _logger.LogInformation("Downlink- TerminalId:{TerminalId} RequestId:{requestId} Name:{Name}", context.TerminalId, requestId, methodRequest.Name);
 
             // Lookup payload formatter name, none specified use context one which is from device attributes or the default in configuration
             string payloadFormatterName;
@@ -72,7 +72,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // Ensure that method paylod is not null and is valid JSON, if not bug out
                if (string.IsNullOrWhiteSpace(method.Payload))
                {
-                  _logger.LogWarning("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Method payload is empty", context.TerminalId, requestId);
+                  _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Method payload is empty", context.TerminalId, requestId);
 
                   return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} Method payload is empty.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
                }
@@ -83,9 +83,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
                catch (JsonReaderException jex)
                {
-                  _logger.LogWarning(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Method Payload is not valid JSON", context.TerminalId, requestId);
+                  _logger.LogWarning(jex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Method Payload is not valid JSON", context.TerminalId, requestId);
 
-                  return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} method payload is not valid JSON.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
+                  return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} Method payload is not valid JSON.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
                }
             }
             else
@@ -98,7 +98,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
                catch (JsonReaderException jex)
                {
-                  _logger.LogWarning(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
+                  _logger.LogWarning(jex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
                }
             }
 
@@ -118,7 +118,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if ((payloadBytes.Length < Constants.DownlinkPayloadMinimumLength) || (payloadBytes.Length > Constants.DownlinkPayloadMaximumLength))
             {
-               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} PayloadBytes:{payloadBytes} length:{Length} invalid must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength); ;
+               _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} PayloadBytes:{payloadBytes} length:{Length} invalid, must be {DownlinkPayloadMinimumLength} to {DownlinkPayloadMaximumLength} bytes", context.TerminalId, requestId, BitConverter.ToString(payloadBytes), payloadBytes.Length, Constants.DownlinkPayloadMinimumLength, Constants.DownlinkPayloadMaximumLength); ;
 
                return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} payload evaluation length invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
             }

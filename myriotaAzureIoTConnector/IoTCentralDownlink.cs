@@ -43,7 +43,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
          try
          {
-            _logger.LogWarning("Downlink- TerminalId:{TerminalId} RequestId:{requestId} Name:{Name}", context.TerminalId, requestId, methodRequest.Name);
+            _logger.LogInformation("Downlink- TerminalId:{TerminalId} RequestId:{requestId} Name:{Name}", context.TerminalId, requestId, methodRequest.Name);
 
             // Lookup payload formatter name, none specified use context one which is from device attributes or the default in configuration
             string payloadFormatterName;
@@ -76,7 +76,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
                catch (JsonReaderException jex)
                {
-                  _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} method-name:{methodName} invalid Method.Payload:{method.Payload}", context.TerminalId, requestId, methodRequest.Name, method.Payload);
+                  _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Name:{methodName} invalid Method.Payload:{method.Payload}", context.TerminalId, requestId, methodRequest.Name, method.Payload);
 
                   return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} method payload invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
                }
@@ -94,7 +94,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
 
             }
-
 
             if (messageJson is null)
             {
