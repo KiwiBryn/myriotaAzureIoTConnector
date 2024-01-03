@@ -51,74 +51,61 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             {
                payloadFormatterName = method.Formatter;
 
-               _logger.LogInformation("Downlink- IoT Central TerminalID:{TermimalId} RequestID:{requestId} Method formatter:{payloadFormatterName} ", context.TerminalId, requestId, payloadFormatterName);
+               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TermimalId} RequestID:{requestId} Method formatter:{payloadFormatterName} ", context.TerminalId, requestId, payloadFormatterName);
             }
             else
             {
                payloadFormatterName = context.PayloadFormatterDownlink;
 
-               _logger.LogInformation("Downlink- IoT Central TerminalID:{TermimalId} RequestID:{requestId} Context formatter:{payloadFormatterName} ", context.TerminalId, requestId, payloadFormatterName);
+               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TermimalId} RequestID:{requestId} Context formatter:{payloadFormatterName} ", context.TerminalId, requestId, payloadFormatterName);
             }
 
             // Display methodRequest.Data as Hex
-            if (methodRequest.Data is not null)
-            {
-               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Data:{Data}", context.TerminalId, requestId, BitConverter.ToString(methodRequest.Data));
-            }
-            else
-            {
-               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Data:null", context.TerminalId, requestId);
-            }
+            _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Data:{Data}", context.TerminalId, requestId, BitConverter.ToString(methodRequest.Data));
 
 
             JObject? messageJson = null;
 
-            // if there is a payload try converting it...
-            if ((methodRequest.Data is not null) && !string.IsNullOrWhiteSpace(methodRequest.DataAsJson) && (string.CompareOrdinal(methodRequest.DataAsJson, "null") != 0))
+            // special case for for "empty" payload
+            if (String.IsNullOrWhiteSpace(methodRequest.DataAsJson) || (string.Compare(methodRequest.DataAsJson, "null", true) == 0))
             {
-               // The method.DataAsJson could be JSON
+               // If the method payload in the application configuration is broken nothing can be done
                try
                {
-                  messageJson = JObject.Parse(methodRequest.DataAsJson);
-
-                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
+                  messageJson = JObject.Parse(method.Payload);
                }
                catch (JsonReaderException jex)
                {
-                  _logger.LogInformation(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
+                  _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Name:{methodName} invalid Method.Payload:{method.Payload}", context.TerminalId, requestId, methodRequest.Name, method.Payload);
 
-                  messageJson = new JObject(new JProperty(methodRequest.Name, JToken.Parse(methodRequest.DataAsJson)));
-
-                  _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
+                  return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} method payload invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
                }
             }
             else
             {
-               if ((method is not null) && !string.IsNullOrWhiteSpace(method.Payload))
+               // See if the message payload is valid JSON e.g. an object, vector etc.
+               try
                {
-                  // If the method payload in the application configuration is broken nothing can be done
-                  try
-                  {
-                     messageJson = JObject.Parse(method.Payload);
-
-                     _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} method payload:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
-                  }
-                  catch (JsonReaderException jex)
-                  {
-                     _logger.LogError(jex, "Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Name:{methodName} invalid Method.Payload:{method.Payload}", context.TerminalId, requestId, methodRequest.Name, method.Payload);
-
-                     return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} method payload invalid.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
-                  }
+                  messageJson = JObject.Parse(methodRequest.DataAsJson);
                }
+               catch (JsonReaderException)
+               {
+                  messageJson = new JObject(new JProperty(methodRequest.Name, JToken.Parse(methodRequest.DataAsJson)));
+               }
+
+            }
+
+            if (messageJson is null)
+            {
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Message JSON is null", context.TerminalId, requestId);
+            }
+            else
+            {
+               _logger.LogInformation("Downlink- IoT Central TerminalID:{TerminalId} RequestID:{requestId} Message JSON:{messageJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(messageJson, Formatting.Indented));
             }
 
             // This "shouldn't" fail, but it could for invalid path to blob, timeout retrieving blob, payload formatter syntax error etc.
             IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
-
-            if (messageJson is null)
-            {
-               messageJson = new JObject();
-            }
 
             // This "shouldn't" fail, but the payload formatters can throw runtime exceptions like null reference, divide by zero, index out of range etc.
             byte[] payloadBytes = payloadFormatter.Evaluate(context.TerminalId, methodRequest.Name, messageJson, methodRequest.Data);
