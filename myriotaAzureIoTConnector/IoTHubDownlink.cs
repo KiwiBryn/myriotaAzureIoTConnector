@@ -73,7 +73,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             JObject? requestJson = null;
 
             // if there is a payload try converting it...
-            if ((methodRequest.Data is not null) && !string.IsNullOrWhiteSpace(methodRequest.DataAsJson) && (string.CompareOrdinal(methodRequest.DataAsJson, "null") != 0))
+            if ((methodRequest.Data is not null) && !string.IsNullOrWhiteSpace(methodRequest.DataAsJson) && (string.CompareOrdinal(methodRequest.DataAsJson, "\"\"") != 0))
             {
                // The method.DataAsJson could be JSON
                try
