@@ -72,55 +72,35 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             JObject? requestJson = null;
 
-            if ((method is not null) && !string.IsNullOrWhiteSpace(method.Payload))
+            // if there is a payload try converting it...
+            if ((methodRequest.Data is not null) && !string.IsNullOrWhiteSpace(methodRequest.DataAsJson) && (string.CompareOrdinal(methodRequest.DataAsJson, "null") != 0))
             {
-               // There is a matching method with a possible JSON payload
-               string payload = method.Payload.Trim();
-
-               if ((payload.StartsWith('{') && payload.EndsWith('}')) || (payload.StartsWith('[') && payload.EndsWith(']')))
+               // The method.DataAsJson could be JSON
+               try
                {
-                  // The payload is could be JSON
-                  try
-                  {
-                     requestJson = JObject.Parse(payload);
-                  }
-                  catch (JsonReaderException jex)
-                  {
-                     _logger.LogWarning(jex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Method Payload is not valid JSON", context.TerminalId, requestId);
+                  requestJson = JObject.Parse(methodRequest.DataAsJson);
 
-                     return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} Method payload is not valid JSON.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
-                  }
+                  _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(requestJson, Formatting.Indented));
                }
-               else
+               catch (JsonReaderException jex)
                {
-                  // The payload couldn't be JSON
-                  _logger.LogWarning("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Method Payload is definitely not valid JSON", context.TerminalId, requestId);
-
-                  return new MethodResponse(Encoding.ASCII.GetBytes($"{{\"message\":\"RequestID:{requestId} Method payload is definitely not valid JSON.\"}}"), (int)HttpStatusCode.UnprocessableEntity);
+                  _logger.LogInformation(jex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
                }
-
-               _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} Method Payload:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(requestJson, Formatting.Indented));
             }
             else
             {
-               // If there was not matching method or the payload was "empty" see if the method request payload is valid
-               if (!string.IsNullOrWhiteSpace(methodRequest.DataAsJson))
+               if ((method is not null) && !string.IsNullOrWhiteSpace(method.Payload))
                {
-                  string payload = methodRequest.DataAsJson.Trim();
-
-                  if ((payload.StartsWith('{') && payload.EndsWith('}')) || (payload.StartsWith('[') && payload.EndsWith(']')))
+                  // The method.payload could be JSON
+                  try
                   {
-                     // The payload is could be JSON
-                     try
-                     {
-                        requestJson = JObject.Parse(payload);
+                     requestJson = JObject.Parse(method.Payload);
 
-                        _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(requestJson, Formatting.Indented));
-                     }
-                     catch (JsonReaderException jex)
-                     {
-                        _logger.LogInformation(jex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
-                     }
+                     _logger.LogInformation("Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(requestJson, Formatting.Indented));
+                  }
+                  catch (JsonReaderException jex)
+                  {
+                     _logger.LogInformation(jex, "Downlink- IoT Hub TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
                   }
                }
             }
@@ -128,8 +108,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             // This "shouldn't" fail, but it could for invalid path to blob, timeout retrieving blob, payload formatter syntax error etc.
             IFormatterDownlink payloadFormatter = await _payloadFormatterCache.DownlinkGetAsync(payloadFormatterName);
 
-            if ( requestJson is null ) 
-            { 
+            if (requestJson is null)
+            {
                requestJson = new JObject();
             }
 
