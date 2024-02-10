@@ -33,13 +33,12 @@ using Microsoft.Extensions.Options;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   internal partial class DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IIoTHubDownlink ioTHubDownlink, IIoTCentralDownlink ioTCentralDownlink, IMyriotaModuleAPI myriotaModuleAPI) : IDeviceConnectionCache
+   internal partial class DeviceConnectionCache(ILoggerFactory loggerFactory, IOptions<Models.AzureIoT> azureIoTSettings, IOptions<Models.PayloadformatterSettings> payloadformatterSettings, IDownlinkMethodProcessor downlinkMessageProcessor, IMyriotaModuleAPI myriotaModuleAPI) : IDeviceConnectionCache
    {
-      private readonly ILogger _logger = loggerFactory.CreateLogger<MyriotaUplinkMessageProcessor>();
+      private readonly ILogger _logger = loggerFactory.CreateLogger<UplinkMessageProcessor>();
       private readonly Models.AzureIoT _azureIoTSettings = azureIoTSettings.Value;
       private readonly Models.PayloadformatterSettings _payloadformatterSettings = payloadformatterSettings.Value;
-      private readonly IIoTHubDownlink _ioTHubDownlink = ioTHubDownlink;
-      private readonly IIoTCentralDownlink _ioTCentralDownlink = ioTCentralDownlink;
+      private readonly IDownlinkMethodProcessor _downlinkMessageProcessor = downlinkMessageProcessor;
       private readonly IMyriotaModuleAPI _myriotaModuleAPI = myriotaModuleAPI;
 
       private static readonly LazyCache.CachingService _deviceConnectionCache = new();
@@ -69,19 +68,17 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
                      throw new NotImplementedException("AzureIoT Hub unsupported ConnectionType");
                }
-
-               await context.DeviceClient.SetMethodDefaultHandlerAsync(_ioTHubDownlink.IotHubMethodHandler, context, cancellationToken);
                break;
             case Models.ApplicationType.IoTCentral:
                context = await _deviceConnectionCache.GetOrAddAsync(terminalId, (ICacheEntry x) => DeviceProvisioningServiceConnectAsync(terminalId, item, _azureIoTSettings.IoTCentral.DeviceProvisioningService, cancellationToken), memoryCacheEntryOptions);
-
-               await context.DeviceClient.SetMethodDefaultHandlerAsync(_ioTCentralDownlink.DefaultMethodHandler, context, cancellationToken);
                break;
             default:
                _logger.LogError("Uplink- Azure IoT ApplicationType unknown {ApplicationType}", _azureIoTSettings.ApplicationType);
 
                throw new NotImplementedException("AzureIoT Hub unsupported ApplicationType");
          }
+
+         await context.DeviceClient.SetMethodDefaultHandlerAsync(_downlinkMessageProcessor.MethodHandler, context, cancellationToken);
 
          await context.DeviceClient.OpenAsync(cancellationToken);
 

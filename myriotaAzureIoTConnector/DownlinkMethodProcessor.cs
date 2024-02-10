@@ -85,7 +85,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                }
                catch (JsonReaderException jex)
                {
-                  _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON:{Message}", context.TerminalId, requestId, jex.Message);
+                  _logger.LogInformation(jex, "Downlink- TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON", context.TerminalId, requestId);
 
                   methodJson = new JObject(new JProperty(methodRequest.Name, JToken.Parse(methodRequest.DataAsJson)));
 

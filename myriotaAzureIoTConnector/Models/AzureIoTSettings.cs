@@ -39,6 +39,8 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 
       public AzureIoTCentral IoTCentral { get; set; }
 
+      public CaseInsensitiveDictionary<Method> Methods { get; set; }
+
       public string DtdlModelId { get; set; } = string.Empty;
    }
 
@@ -64,11 +66,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
       public string ConnectionString { get; set; } = string.Empty;
 
       public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
-
-      public CaseInsensitiveDictionary<AzureIoTHubMethod> Methods { get; set; }
    }
 
-   public class AzureIoTHubMethod
+   public class Method
    {
       public string Formatter { get; set; } = string.Empty;
 
@@ -78,15 +78,6 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
    public class AzureIoTCentral
    {
       public AzureDeviceProvisioningService DeviceProvisioningService { get; set; }
-
-      public CaseInsensitiveDictionary<AzureIoTCentralMethod> Methods { get; set; }
-   }
-
-   public class AzureIoTCentralMethod
-   {
-      public string Formatter { get; set; } = string.Empty;
-
-      public string Payload { get; set; } = string.Empty;
    }
 
    public class AzureDeviceProvisioningService

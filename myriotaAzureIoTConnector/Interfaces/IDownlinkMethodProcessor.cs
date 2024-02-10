@@ -1,4 +1,4 @@
-﻿// Copyright (c) November 2023, devMobile Software
+﻿// Copyright (c) January 2024, devMobile Software
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,8 @@ using Microsoft.Azure.Devices.Client;
 
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 {
-   public interface IIoTHubDownlink
+   internal interface IDownlinkMethodProcessor
    {
-      public Task<MethodResponse> IotHubMethodHandler(MethodRequest methodRequest, object userContext);
+      public Task<MethodResponse> MethodHandler(MethodRequest methodRequest, object userContext);
    }
 }
