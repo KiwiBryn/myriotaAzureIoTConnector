@@ -10,6 +10,14 @@
     <AssemblyVersion>2.0.0.0</AssemblyVersion>
     <Copyright>devMobile Software 2023 (c)</Copyright>
     <PackageProjectUrl>https://blog.devmobile.co.nz/</PackageProjectUrl>
+    <Title>Myriota Azure Connector</Title>
+    <Version>2.0.0</Version>
+    <Authors>Bryn Lewis</Authors>
+    <Company>devMobile Software</Company>
+    <Product>Myriota Azure Connector</Product>
+    <Description>Myriota Satellite IoT to Azure IoT Hub/Central Cloud Identity Gateway</Description>
+    <PackageTags>Myriota;Azure IoT;Satlellite;IoT;AMQP</PackageTags>
+    <EnableNETAnalyzers>False</EnableNETAnalyzers>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Azure.Storage.Queues" Version="12.17.1" />
