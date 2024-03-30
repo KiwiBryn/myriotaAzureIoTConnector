@@ -20,3 +20,7 @@ The repo has the source code for the series of blog posts written as I built the
 12. [Downlink logging refactor](http://blog.devmobile.co.nz/2023/11/28/myriota-connector-azure-iot-hub-downlink-logging-refactor/)
 13. [Azure IoT Hub Downlink Methods](http://blog.devmobile.co.nz/2023/12/21/myriota-connector-azure-iot-hub-downlink-methods/)
 14. [Azure IoT Central Downlink Methods](http://blog.devmobile.co.nz/2024/01/05/myriota-connector-azure-iot-central-downlink-methods/)
+
+![Azure IoT Hub Telemetry Uplink](AzureIoTExplorerLelemetry.png)
+
+![Azure IoT Central Telemetry Uplink](AzureIoTCentralUplink.png)
