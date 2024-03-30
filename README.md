@@ -1,5 +1,7 @@
 # Myriota Azure IoT Identity Translation Gateway
 
+[![BuiltWithDot.Net shield](https://builtwithdot.net/project/5738/azure-iot-cloud-services-satellite-connectivity-with-myriota/badge)](https://builtwithdot.net/project/5738/azure-iot-cloud-services-satellite-connectivity-with-myriota)
+
 An Azure IoT Cloud Identity Translation gateway for the [Myriota](https://myriota.com/) Satellite IoT service with [Azure IoT Hub](https://azure.microsoft.com/en-us/products/iot-hub/?WT.mc_id=IoT-MVP-5001375), [Azure IoT Central](https://azure.microsoft.com/en-us/products/iot-central/?WT.mc_id=IoT-MVP-5001375), [Azure IoT Hub Device Provisoning Service](https://learn.microsoft.com/en-us/azure/iot-dps/about-iot-dps?WT.mc_id=IoT-MVP-5001375) and uplink messaging.
 
 ![Azure IoT Identity Translation Gateway Archiecture](MyriotaAzureIoTHubConnectorV1.png)
