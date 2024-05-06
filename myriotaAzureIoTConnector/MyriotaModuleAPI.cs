@@ -99,7 +99,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
          {
             using (RestClient client = new(restClientOptions))
             {
-               RestRequest request = new("v1/control-messages/", Method.Post);
+               RestRequest request = new("v1/control-messages", Method.Post);
 
                request.AddJsonBody(JsonSerializer.Serialize(message));
 
