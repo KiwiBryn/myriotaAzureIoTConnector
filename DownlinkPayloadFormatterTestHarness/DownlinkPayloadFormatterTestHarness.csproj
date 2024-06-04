@@ -6,14 +6,14 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <RepositoryUrl>https://github.com/KiwiBryn/myriotaAzureIoTConnector</RepositoryUrl>
-    <AssemblyVersion>1.4.0.0</AssemblyVersion>
+    <AssemblyVersion>1.6.0.0</AssemblyVersion>
     <Copyright>devMobile Software 2023 (c)</Copyright>
     <PackageProjectUrl>https://blog.devmobile.co.nz/</PackageProjectUrl>     
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="CS-Script" Version="4.8.14" />
+    <PackageReference Include="CS-Script" Version="4.8.16" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
