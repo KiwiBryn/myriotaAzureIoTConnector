@@ -4,7 +4,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
      <RepositoryUrl>https://github.com/KiwiBryn/myriotaAzureIoTConnector</RepositoryUrl>
-     <AssemblyVersion>2.0.0.0</AssemblyVersion>
+     <AssemblyVersion>2.1.0.0</AssemblyVersion>
      <Copyright>devMobile Software 2023 (c)</Copyright>
      <PackageProjectUrl>https://blog.devmobile.co.nz/</PackageProjectUrl>
      <ImplicitUsings>disable</ImplicitUsings>
@@ -12,9 +12,9 @@
  </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Storage.Queues" Version="12.17.1" />
+    <PackageReference Include="Azure.Storage.Queues" Version="12.18.0" />
     <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.22.0" />
-    <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.2" />
+    <PackageReference Include="Microsoft.Extensions.Azure" Version="1.7.3" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
   </ItemGroup>
 
