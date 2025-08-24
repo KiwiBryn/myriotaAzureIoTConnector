@@ -3,7 +3,7 @@
     <TargetFramework>net8.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <OutputType>Exe</OutputType>
-    <ImplicitUsings>disable</ImplicitUsings>
+    <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>2d63c0ae-6550-4950-898a-9a92e9a7309a</UserSecretsId>
     <RepositoryUrl>https://github.com/KiwiBryn/myriotaAzureIoTConnector</RepositoryUrl>
@@ -48,6 +48,28 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Using Include="System.Threading.ExecutionContext" Alias="ExecutionContext" />
+    <Using Include="Azure.Storage.Blobs" />
+    <Using Include="Azure.Storage.Blobs.Models" />
+    <Using Include="CSScriptLib" />
+    <Using Include="Microsoft.Azure.Devices.Client" />
+    <Using Include="Microsoft.Azure.Devices.Provisioning.Client" />
+    <Using Include="Microsoft.Azure.Devices.Provisioning.Client.PlugAndPlay" />
+    <Using Include="Microsoft.Azure.Devices.Provisioning.Client.Transport" />
+    <Using Include="Microsoft.Azure.Devices.Shared" />
+    <Using Include="Microsoft.Azure.Functions.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Azure.Functions.Worker" />
+    <Using Include="Microsoft.Extensions.Azure" />
+    <Using Include="Microsoft.Extensions.Caching.Memory" />
+    <Using Include="Microsoft.Extensions.Configuration" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Extensions.Hosting" />
+    <Using Include="Microsoft.Extensions.Logging" />
+    <Using Include="Microsoft.Extensions.Options" />
+    <Using Include="RestSharp" />
+    <Using Include="System.Globalization" />
+    <Using Include="System.Net" />
+    <Using Include="System.Security.Cryptography" />
+    <Using Include="System.Text" />
+    <Using Include="System.Text.Json" />
   </ItemGroup>
 </Project>
