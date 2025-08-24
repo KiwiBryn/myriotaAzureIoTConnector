@@ -21,4 +21,9 @@
     <ProjectReference Include="..\IPayloadFormatter\IPayloadFormatter.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Using Include="CommandLine" />
+    <Using Include="CSScriptLib" />
+  </ItemGroup>
+
 </Project>
