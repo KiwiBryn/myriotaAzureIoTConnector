@@ -4,22 +4,13 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
 {
    [Route("[controller]")]
    [ApiController]
-   public class UplinkController : ControllerBase
+   public class UplinkController(QueueServiceClient queueServiceClient, ILogger<UplinkController> logger) : ControllerBase
    {
-      private readonly ILogger<UplinkController> _logger;
-      private readonly QueueServiceClient _queueServiceClient;
-
-      public UplinkController(QueueServiceClient queueServiceClient, ILogger<UplinkController> logger)
-      {
-         _queueServiceClient = queueServiceClient;
-         _logger = logger;
-      }
-
       [HttpPost()]
       public async Task<IActionResult> Post([FromBody] Models.UplinkPayloadWebDto payloadWeb)
       {
          // included payload ID for correlation as uplink message processed
-         _logger.LogInformation("Uplink- Payload ID:{Id}", payloadWeb.Id);
+         logger.LogInformation("Uplink- Payload ID:{Id}", payloadWeb.Id);
 
          try
          {
@@ -47,7 +38,7 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
             }
             catch (JsonException jex)
             {
-               _logger.LogError(jex, "UplinkController.Post JsonException Deserialising payloadWeb.Data");
+               logger.LogError(jex, "UplinkController.Post JsonException Deserialising payloadWeb.Data");
 
                return this.BadRequest("JsonException Deserialising payloadWeb.Data");
             }
@@ -61,19 +52,19 @@ namespace devMobile.IoT.myriotaAzureIoTConnector.myriota.UplinkWebhook.Controlle
                   Value = packet.Value
                });
 
-               _logger.LogInformation("Uplink- TerminalId:{TerminalId} PayloadId:{Id} TelemetryEvent:{telemetryEvent} Sending", packet.TerminalId, payloadWeb.Id, JsonSerializer.Serialize(packet));
+               logger.LogInformation("Uplink- TerminalId:{TerminalId} PayloadId:{Id} TelemetryEvent:{telemetryEvent} Sending", packet.TerminalId, payloadWeb.Id, JsonSerializer.Serialize(packet));
             }
 
-            QueueClient queueClient = _queueServiceClient.GetQueueClient("uplink");
+            QueueClient queueClient = queueServiceClient.GetQueueClient("uplink");
 
             await queueClient.SendMessageAsync(Convert.ToBase64String(JsonSerializer.SerializeToUtf8Bytes(payloadQueue)));
 
             // included payload ID for correlation as uplink message processed
-            _logger.LogInformation("SendAsync payload ID:{Id} sent", payloadWeb.Id);
+            logger.LogInformation("SendAsync payload ID:{Id} sent", payloadWeb.Id);
          }
          catch (Exception ex)
          {
-            _logger.LogError(ex, "Uplink- Controller POST failed");
+            logger.LogError(ex, "Uplink- Controller POST failed");
 
             return this.StatusCode(500);
          }
