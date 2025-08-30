@@ -25,6 +25,7 @@
     <Using Include="CommandLine" />
     <Using Include="CSScriptLib" />
     <Using Include="System.Globalization" />
+    <Using Include="System.Text.Json.Nodes" />
   </ItemGroup>
 
 </Project>

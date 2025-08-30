@@ -1,14 +1,14 @@
-﻿using System;
+﻿// Copyright (c) August 2025, devMobile Software, MIT License
+//
+using System;
 using System.Collections.Generic;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
 {
-   public byte[] Evaluate(string terminalId, string methodName, JObject payloadJson, byte[] payloadBytes)
+   public byte[] Evaluate(string terminalId, string methodName, JsonObject payloadJson, byte[] payloadBytes)
    {
-      byte? status = payloadJson.Value<byte?>("FanSpeed");
+      byte? front = (float)payloadJson["FanSpeed"].GetValue<byte?>();
 
       if (!status.HasValue)
       {

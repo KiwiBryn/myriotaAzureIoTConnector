@@ -1,4 +1,6 @@
 ﻿/*
+Copyright (c) August 2025, devMobile Software, MIT License
+
 myriota tracker payload format
 
 typedef struct {
@@ -8,20 +10,18 @@ typedef struct {
   uint32_t time;      // epoch timestamp of last fix
 } __attribute__((packed)) tracker_message; 
 
-*/ 
+*/
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+using System.Text.Json.Nodes;
 
 
 public class FormatterUplink : PayloadFormatter.IFormatterUplink
 {
-    public JObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
+    public JsonObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
     {
-        JObject telemetryEvent = new JObject();
+      JsonObject telemetryEvent = new JsonObject();
 
         if (payloadBytes is null)
         {
@@ -30,7 +30,7 @@ public class FormatterUplink : PayloadFormatter.IFormatterUplink
 
         telemetryEvent.Add("SequenceNumber", BitConverter.ToUInt16(payloadBytes));
 
-        JObject location = new JObject();
+        JsonObject location = new JsonObject();
 
         double latitude = BitConverter.ToInt32(payloadBytes, 2) / 10000000.0;
         location.Add("lat", latitude);

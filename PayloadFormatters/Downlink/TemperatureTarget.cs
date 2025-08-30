@@ -1,14 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) August 2025, devMobile Software, MIT License
+//
+using System;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
 {
    public byte[] Evaluate(string terminalId, string methodName, JObject payloadJson, byte[] payloadBytes)
    {
-      double? temperature = payloadJson.Value<double?>("TemperatureTarget");
+      double? temperature = payloadJson["TemperatureTarget"].GetValue<double?>();
 
       if (!temperature.HasValue)
       {

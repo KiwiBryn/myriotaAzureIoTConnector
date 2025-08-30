@@ -4,13 +4,13 @@ using System;
 using System.Collections.Generic;
 
 
-public class FormatterUplink
+public class FormatterUplink : PayloadFormatter.IFormatterUplink
 {
     public JsonObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
     {
         JsonObject telemetryEvent = new JsonObject();
 
-        telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
+        //telemetryEvent.Add("Bytes", BitConverter.ToString(payloadBytes));
 
         return telemetryEvent;
     }

@@ -1,16 +1,17 @@
+// Copyright (c) August 2025, devMobile Software, MIT License
+//
 using System;
 using System.Collections.Generic;
+using System.Text.Json.Nodes;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
 {
-   public byte[] Evaluate(string terminalId, string methodName, JObject payloadJson, byte[] payloadBytes)
+   public byte[] Evaluate(string terminalId, string methodName, JsonObject payloadJson, byte[] payloadBytes)
    {
-      float? front = payloadJson.Value<float>("Front");
-      float? middle = payloadJson.Value<float>("Middle");
-      float? back = payloadJson.Value<float>("Back");
+      float? front = (float)payloadJson["Front"].GetValue<double>();
+      float? middle = (float)payloadJson["Middle"].GetValue<double>();
+      float? back = (float)payloadJson["Back"].GetValue<double>();
 
       byte[] result = new byte[13];
 

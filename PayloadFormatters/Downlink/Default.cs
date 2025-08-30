@@ -1,12 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿// Copyright (c) October 2023, devMobile Software, MIT License
+//
+using System;
+using System.Text.Json;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
 {
-   public byte[] Evaluate(string terminalId, string methodName, JObject payloadJson, byte[] payloadBytes)
+   public byte[] Evaluate(string terminalId, string methodName, JsonDocument payloadJson, byte[] payloadBytes)
    {
       return payloadBytes;
    }

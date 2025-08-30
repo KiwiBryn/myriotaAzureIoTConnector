@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿// Copyright (c) August 2025, devMobile Software, MIT License
+//
+using System;
 
 public class FormatterDownlink : PayloadFormatter.IFormatterDownlink
 {
