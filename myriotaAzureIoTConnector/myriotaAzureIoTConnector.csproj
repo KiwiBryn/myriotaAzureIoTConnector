@@ -28,6 +28,7 @@
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="6.7.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.5" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Logging.ApplicationInsights" Version="3.0.41" />
     <PackageReference Include="RestSharp" Version="112.1.0" />
   </ItemGroup>
@@ -67,5 +68,7 @@
     <Using Include="System.Security.Cryptography" />
     <Using Include="System.Text" />
     <Using Include="System.Text.Json" />
+    <Using Include="System.Text.Json.Nodes" />
+    <Using Include="System.Text.Json.Serialization" />
   </ItemGroup>
 </Project>
