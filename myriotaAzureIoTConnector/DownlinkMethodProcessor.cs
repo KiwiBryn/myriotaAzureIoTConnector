@@ -1,8 +1,5 @@
 ﻿// Copyright (c) January 2024, devMobile Software. MIT License
 //
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using PayloadFormatter;
 
 
@@ -49,7 +46,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
             }
 
 
-            JObject? methodJson = null;
+            JsonObject? methodJson = null;
 
             // if there is a payload try converting it...
             if ((methodRequest.Data is not null) && !string.IsNullOrWhiteSpace(methodRequest.DataAsJson) && (string.CompareOrdinal(methodRequest.DataAsJson, "null") != 0) && (string.CompareOrdinal(methodRequest.DataAsJson, "\"\"") != 0))
@@ -57,17 +54,20 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                // The method.DataAsJson could be JSON
                try
                {
-                  methodJson = JObject.Parse(methodRequest.DataAsJson);
+                  methodJson = JsonNode.Parse(methodRequest.DataAsJson) as JsonObject;
 
-                  _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(methodJson, Formatting.Indented));
+                  _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonSerializer.Serialize(methodJson));
                }
-               catch (JsonReaderException jex)
+               catch (JsonException jex)
                {
                   _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} DataAsJson is not valid JSON Error:{Message}", context.TerminalId, requestId, jex.Message);
 
-                  methodJson = new JObject(new JProperty(methodRequest.Name, JToken.Parse(methodRequest.DataAsJson)));
+                  methodJson = new JsonObject
+                  {
+                     { methodRequest.Name, methodRequest.DataAsJson }
+                  };
 
-                  _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(methodJson, Formatting.Indented));
+                  _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} DataAsJson:{requestJson}", context.TerminalId, requestId, JsonSerializer.Serialize(methodJson));
                }
             }
             else
@@ -77,11 +77,11 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                   // If the method payload in the application configuration is broken nothing can be done
                   try
                   {
-                     methodJson = JObject.Parse(method.Payload);
+                     methodJson = JsonNode.Parse(method.Payload) as JsonObject;
 
-                     _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} method payload:{requestJson}", context.TerminalId, requestId, JsonConvert.SerializeObject(methodJson, Formatting.Indented));
+                     _logger.LogInformation("Downlink- TerminalID:{TerminalId} RequestID:{requestId} method payload:{requestJson}", context.TerminalId, requestId, JsonSerializer.Serialize(methodJson));
                   }
-                  catch (JsonReaderException jex)
+                  catch (JsonException jex)
                   {
                      _logger.LogError(jex, "Downlink- TerminalID:{TerminalId} RequestID:{requestId} Name:{methodName} invalid Method.Payload:{method.Payload}", context.TerminalId, requestId, methodRequest.Name, method.Payload);
 
@@ -95,7 +95,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
 
             if (methodJson is null)
             {
-               methodJson = new JObject();
+               methodJson = new JsonObject();
             }
 
             // This also "shouldn't" fail, but the payload formatters can throw runtime exceptions like null reference, divide by zero, index out of range etc.

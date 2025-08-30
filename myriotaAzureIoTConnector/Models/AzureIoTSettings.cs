@@ -1,9 +1,5 @@
 ﻿// Copyright (c) August 2023, devMobile Software, MIT License
 //
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-
-
 namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 {
    public enum ApplicationType
@@ -15,7 +11,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 
    public class AzureIoT
    {
-      [JsonConverter(typeof(StringEnumConverter))]
+      [JsonConverter(typeof(JsonStringEnumConverter))]
       public ApplicationType ApplicationType { get; set; }
 
       public AzureIotHub IoTHub { get; set; }
@@ -43,7 +39,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
 
    public class AzureIotHub
    {
-      [JsonConverter(typeof(StringEnumConverter))]
+      [JsonConverter(typeof(JsonStringEnumConverter))]
       public AzureIotHubConnectionType ConnectionType { get; set; }
 
       public string ConnectionString { get; set; } = string.Empty;

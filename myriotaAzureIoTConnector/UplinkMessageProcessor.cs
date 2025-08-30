@@ -1,8 +1,5 @@
 // Copyright (c) August 2023, devMobile Software, MIT License
 //
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
 using PayloadFormatter;
 
 
@@ -39,7 +36,7 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                Dictionary<string, string> properties = [];
 
                // This shouldn't fail, but it could for lots of different reasons, null references, divide by zero, out of range etc.
-               JObject telemetryEvent = formatter.Evaluate(packet.TerminalId, properties, packet.Timestamp, payloadBytes);
+               JsonObject telemetryEvent = formatter.Evaluate(packet.TerminalId, properties, packet.Timestamp, payloadBytes);
                if (telemetryEvent is null)
                {
                   _logger.LogWarning("Uplink- TerminalId:{TerminalId} PayloadId:{Id} evaluate failed returned null", packet.TerminalId, payload.Id);
@@ -55,9 +52,9 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
                telemetryEvent.TryAdd("PayloadReceivedAtUtc", payload.PayloadReceivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
                telemetryEvent.TryAdd("PayloadArrivedAtUtc", payload.PayloadArrivedAtUtc.ToString("s", CultureInfo.InvariantCulture));
 
-               _logger.LogInformation("Uplink- TerminalId:{TerminalId} PayloadId:{Id} TelemetryEvent:{telemetryEvent} Sending", packet.TerminalId, payload.Id, JsonConvert.SerializeObject(telemetryEvent, Formatting.Indented));
+               _logger.LogInformation("Uplink- TerminalId:{TerminalId} PayloadId:{Id} TelemetryEvent:{telemetryEvent} Sending", packet.TerminalId, payload.Id, JsonSerializer.Serialize(telemetryEvent));
 
-               using (Message ioTHubmessage = new(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(telemetryEvent))))
+               using (Message ioTHubmessage = new(Encoding.ASCII.GetBytes(JsonSerializer.Serialize(telemetryEvent))))
                {
                   // This is so nasty but can't find a better way
                   foreach (var property in properties)
