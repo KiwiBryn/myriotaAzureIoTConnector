@@ -7,7 +7,7 @@
   "parameters": {
     "resourceGroupName": {
       "type": "string",
-      "defaultValue": "myriotaAzureIoTConnector",
+      "defaultValue": "MyriotaConnector",
       "metadata": {
         "description": "Name of the resource group for the resource. It is recommended to put resources under same resource group for better tracking."
       }
@@ -81,7 +81,7 @@
                   "metadata": [
                     {
                       "name": "CURRENT_STACK",
-                      "value": "dotnetcore"
+                      "value": "dotnet"
                     }
                   ]
                 }
