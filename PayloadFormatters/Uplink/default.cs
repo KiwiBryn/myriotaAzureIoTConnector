@@ -2,14 +2,12 @@
 using System.Collections.Generic;
 using System.Globalization;
 
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
+using System.Text.Json.Nodes;
 public class FormatterUplink : PayloadFormatter.IFormatterUplink
 {
-   public JObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
+   public JsonObject Evaluate(string terminalId, IDictionary<string, string> properties, DateTime timestamp, byte[] payloadBytes)
    {
-      JObject telemetryEvent = new JObject();
+      JsonObject telemetryEvent = new JsonObject();
 
       properties.Add("iothub-creation-time-utc", timestamp.ToString("s", CultureInfo.InvariantCulture));
 
