@@ -11,7 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <Using Include="System.Text.Json" />
+    <Using Include="System.Text.Json.Nodes" />
   </ItemGroup>
 
 </Project>
