@@ -2,7 +2,7 @@
   "profiles": {
     "DownlinkPayloadFormatterTestHarness": {
       "commandName": "Project",
-      "commandLineArgs": "-f C:\\Users\\BrynLewis\\source\\repos\\myriotaAzureIoTConnector\\PayloadFormatters\\Downlink\\default.cs -t 12345 -j"
+      "commandLineArgs": "-f C:\\Users\\BrynLewis\\source\\repos\\myriotaAzureIoTConnector\\PayloadFormatters\\Downlink\\acceleration.cs -t 12345 -j C:\\Users\\BrynLewis\\source\\repos\\myriotaAzureIoTConnector\\PayloadFormatters\\Downlink\\acceleration.json -m default -h000102030405\r\n"
     }
   }
 }
