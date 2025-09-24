@@ -7,11 +7,11 @@
     <Nullable>enable</Nullable>
     <UserSecretsId>2d63c0ae-6550-4950-898a-9a92e9a7309a</UserSecretsId>
     <RepositoryUrl>https://github.com/KiwiBryn/myriotaAzureIoTConnector</RepositoryUrl>
-    <AssemblyVersion>2.3.0.0</AssemblyVersion>
+    <AssemblyVersion>2.4.0.0</AssemblyVersion>
     <Copyright>devMobile Software 2023 (c)</Copyright>
     <PackageProjectUrl>https://blog.devmobile.co.nz/</PackageProjectUrl>
     <Title>Myriota Azure Connector</Title>
-    <Version>2.3.0</Version>
+    <Version>2.4.0</Version>
     <Authors>Bryn Lewis</Authors>
     <Company>devMobile Software</Company>
     <Product>Myriota Azure Connector</Product>
