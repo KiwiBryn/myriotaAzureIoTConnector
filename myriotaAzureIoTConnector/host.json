@@ -1,16 +1,23 @@
 {
-   "version": "2.0",
-   "logging": {
-      "applicationInsights": {
-         "samplingSettings": {
-            "isEnabled": true,
-            "excludedTypes": "Request"
-         }
+  "version": "2.0",
+  "logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft": "Warning",
+      "Microsoft.Hosting.Lifetime": "Information"
+    },
+
+    "applicationInsights": {
+      "LogLevel": {
+        "Default": "Information",
+        "Microsoft": "Warning",
+        "Microsoft.Hosting.Lifetime": "Information"
       }
-   },
-   "extensions": {
-      "queues": {
-         "maxDequeueCount": 1
-      }
-   }
+    }
+  },
+  "extensions": {
+    "queues": {
+      "maxDequeueCount": 1
+    }
+  }
 }
