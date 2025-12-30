@@ -1,17 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <AzureFunctionsVersion>v4</AzureFunctionsVersion>
     <OutputType>Exe</OutputType>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <UserSecretsId>2d63c0ae-6550-4950-898a-9a92e9a7309a</UserSecretsId>
     <RepositoryUrl>https://github.com/KiwiBryn/myriotaAzureIoTConnector</RepositoryUrl>
-    <AssemblyVersion>2.4.0.0</AssemblyVersion>
+    <AssemblyVersion>2.5.0.0</AssemblyVersion>
     <Copyright>devMobile Software 2023 (c)</Copyright>
     <PackageProjectUrl>https://blog.devmobile.co.nz/</PackageProjectUrl>
     <Title>Myriota Azure Connector</Title>
-    <Version>2.4.0</Version>
+    <Version>2.5.0</Version>
     <Authors>Bryn Lewis</Authors>
     <Company>devMobile Software</Company>
     <Product>Myriota Azure Connector</Product>
@@ -26,17 +26,17 @@
     <NoWarn>1701;1702;IDE0130</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CS-Script" Version="4.11.0" />
+    <PackageReference Include="CS-Script" Version="4.13.1" />
     <PackageReference Include="LazyCache" Version="2.4.0" />
-    <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="8.0.19" />
+    <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="10.0.1" />
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Amqp" Version="1.16.6" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.0.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="6.7.0" />
-    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.5" />
-    <PackageReference Include="Microsoft.Azure.WebJobs.Logging.ApplicationInsights" Version="3.0.41" />
-    <PackageReference Include="RestSharp" Version="112.1.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker" Version="2.51.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="6.8.0" />
+    <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
+    <PackageReference Include="Microsoft.Azure.WebJobs.Logging.ApplicationInsights" Version="3.0.44" />
+    <PackageReference Include="RestSharp" Version="113.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IPayloadFormatter\IPayloadFormatter.csproj" />
