@@ -1,13 +1,12 @@
 ﻿// Copyright (c) August 2023, devMobile Software, MIT License
 //
-namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models
-{
-    public class MyriotaSettings
-    {
-        public string BaseUrl { get; set; } = string.Empty;
+namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector.Models;
 
-        public string ApiToken { get; set; } = string.Empty;
+ public class MyriotaSettings
+ {
+     public string BaseUrl { get; set; } = string.Empty;
 
-        public bool DownlinkEnabled { get; set; } = false;
-    }
-}
+     public string ApiToken { get; set; } = string.Empty;
+
+     public bool DownlinkEnabled { get; set; } = false;
+ }
