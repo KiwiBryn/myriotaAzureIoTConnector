@@ -26,9 +26,9 @@
     <NoWarn>1701;1702;IDE0130</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="CS-Script" Version="4.13.1" />
+    <PackageReference Include="CS-Script" Version="4.13.2" />
     <PackageReference Include="LazyCache" Version="2.4.0" />
-    <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="10.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.AzureAppServices.HostingStartup" Version="10.0.2" />
     <PackageReference Include="Microsoft.Azure.Devices.Client" Version="1.42.3" />
     <PackageReference Include="Microsoft.Azure.Devices.Provisioning.Transport.Amqp" Version="1.16.6" />
     <PackageReference Include="Microsoft.Azure.Functions.Extensions" Version="1.1.0" />
@@ -36,7 +36,7 @@
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Extensions.Storage" Version="6.8.0" />
     <PackageReference Include="Microsoft.Azure.Functions.Worker.Sdk" Version="2.0.7" />
     <PackageReference Include="Microsoft.Azure.WebJobs.Logging.ApplicationInsights" Version="3.0.44" />
-    <PackageReference Include="RestSharp" Version="113.0.0" />
+    <PackageReference Include="RestSharp" Version="113.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IPayloadFormatter\IPayloadFormatter.csproj" />
