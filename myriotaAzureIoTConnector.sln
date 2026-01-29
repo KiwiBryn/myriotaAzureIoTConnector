@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.7.34009.444
+# Visual Studio Version 18
+VisualStudioVersion = 18.2.11415.280
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "myriotaUplinkWebhook", "myriotaUplinkWebhook\myriotaUplinkWebhook.csproj", "{654B9F8C-0E88-42E7-9C22-E7D89745AEEE}"
 EndProject
@@ -23,8 +23,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Uplink", "Uplink", "{13AC98
 		PayloadFormatters\Uplink\07.BrokenPropertiesDuplicate.cs = PayloadFormatters\Uplink\07.BrokenPropertiesDuplicate.cs
 		PayloadFormatters\Uplink\08.BrokenJsonBroken.cs = PayloadFormatters\Uplink\08.BrokenJsonBroken.cs
 		PayloadFormatters\Uplink\09.SuccessReturnsEmptyJObject.cs = PayloadFormatters\Uplink\09.SuccessReturnsEmptyJObject.cs
-		PayloadFormatters\Uplink\Tracker.cs = PayloadFormatters\Uplink\Tracker.cs
 		PayloadFormatters\Uplink\Default.cs = PayloadFormatters\Uplink\Default.cs
+		PayloadFormatters\Uplink\Tracker.cs = PayloadFormatters\Uplink\Tracker.cs
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Downlink", "Downlink", "{E7567147-28F2-4F60-B71F-AE127BFB246A}"
@@ -33,8 +33,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Downlink", "Downlink", "{E7
 		PayloadFormatters\Downlink\BrokenInterface.cs = PayloadFormatters\Downlink\BrokenInterface.cs
 		PayloadFormatters\Downlink\BrokenRuntime.cs = PayloadFormatters\Downlink\BrokenRuntime.cs
 		PayloadFormatters\Downlink\BrokenSyntax.cs = PayloadFormatters\Downlink\BrokenSyntax.cs
-		PayloadFormatters\Downlink\Density.cs = PayloadFormatters\Downlink\Density.cs
 		PayloadFormatters\Downlink\Default.cs = PayloadFormatters\Downlink\Default.cs
+		PayloadFormatters\Downlink\Density.cs = PayloadFormatters\Downlink\Density.cs
 		PayloadFormatters\Downlink\FanSpeed.cs = PayloadFormatters\Downlink\FanSpeed.cs
 		PayloadFormatters\Downlink\LightsOffOn.cs = PayloadFormatters\Downlink\LightsOffOn.cs
 		PayloadFormatters\Downlink\TemperatureAlerts.cs = PayloadFormatters\Downlink\TemperatureAlerts.cs
