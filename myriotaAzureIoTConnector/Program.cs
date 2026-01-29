@@ -1,29 +1,29 @@
 // Copyright (c) August 2023, devMobile Software, MIT License
 //
-namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
-{
-   internal class Program
-   {
-      static async Task Main(string[] args)
-      {
-         var builder = new HostBuilder();
+namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector;
 
-         builder.ConfigureFunctionsWorkerDefaults()
-            .ConfigureAppConfiguration(c =>
-            {
-               c.AddUserSecrets<Program>(optional: true, reloadOnChange: false);
-               c.AddEnvironmentVariables();
-            })
-           .ConfigureLogging((context, l) =>
+internal class Program
+{
+   static async Task Main(string[] args)
+   {
+      var builder = new HostBuilder();
+
+      builder.ConfigureFunctionsWorkerDefaults()
+         .ConfigureAppConfiguration(c =>
+         {
+            c.AddUserSecrets<Program>(optional: true, reloadOnChange: false);
+            c.AddEnvironmentVariables();
+         })
+        .ConfigureLogging((context, l) =>
+        {
+           l.AddConsole();
+           l.AddApplicationInsightsWebJobs(o => o.ConnectionString = context.Configuration.GetConnectionString("ApplicationInsights"));
+        })
+        .ConfigureServices((hostContext, services) =>
+        {
+           services.AddOptions<Models.AzureIoT>().Configure<IConfiguration>((settings, configuration) =>
            {
-              l.AddConsole();
-              l.AddApplicationInsightsWebJobs(o => o.ConnectionString = context.Configuration.GetConnectionString("ApplicationInsights"));
-           })
-           .ConfigureServices((hostContext,services) =>
-           {
-              services.AddOptions<Models.AzureIoT>().Configure<IConfiguration>((settings, configuration) =>
-              {
-                 configuration.GetSection("AzureIoT").Bind(settings);
+              configuration.GetSection("AzureIoT").Bind(settings);
            });
            services.AddSingleton<IDeviceConnectionCache, DeviceConnectionCache>();
            services.AddOptions<Models.PayloadformatterSettings>().Configure<IConfiguration>((settings, configuration) =>
@@ -42,15 +42,14 @@ namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
               azureClient.AddBlobServiceClient(hostContext.Configuration.GetConnectionString("PayloadFormattersStorage"));
            });
            services.AddHostedService<StartUpService>();
-         })
-         .UseConsoleLifetime();
+        })
+      .UseConsoleLifetime();
 
-         var app = builder.Build();
+      var app = builder.Build();
 
-         using (app)
-         {
-            await app.RunAsync();
-         }
+      using (app)
+      {
+         await app.RunAsync();
       }
    }
 }

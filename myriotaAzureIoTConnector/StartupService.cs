@@ -1,35 +1,34 @@
 ﻿// Copyright (c) October 2023, devMobile Software, MIT License
 //
 [assembly: FunctionsStartup(typeof(devMobile.IoT.MyriotaAzureIoTConnector.Connector.StartUpService))]
-namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector
-{
-    public class StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache) : BackgroundService
-    {
-        private readonly ILogger<StartUpService> _logger = logger;
-        private readonly IDeviceConnectionCache _deviceConnectionCache = deviceConnectionCache;
+namespace devMobile.IoT.MyriotaAzureIoTConnector.Connector;
 
-        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
-        {
-            await Task.Yield();
+ public class StartUpService(ILogger<StartUpService> logger, IDeviceConnectionCache deviceConnectionCache) : BackgroundService
+ {
+     private readonly ILogger<StartUpService> _logger = logger;
+     private readonly IDeviceConnectionCache _deviceConnectionCache = deviceConnectionCache;
 
-            _logger.LogInformation("StartUpService.ExecuteAsync start");
+     protected override async Task ExecuteAsync(CancellationToken cancellationToken)
+     {
+         await Task.Yield();
 
-            try
-            {
-                _logger.LogInformation("Myriota connection cache load start");
+         _logger.LogInformation("StartUpService.ExecuteAsync start");
 
-                await _deviceConnectionCache.TerminalListLoad(cancellationToken);
+         try
+         {
+             _logger.LogInformation("Myriota connection cache load start");
 
-                _logger.LogInformation("Myriota connection cache load finish");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "StartUpService.ExecuteAsync error");
+             await _deviceConnectionCache.TerminalListLoad(cancellationToken);
 
-                throw;
-            }
+             _logger.LogInformation("Myriota connection cache load finish");
+         }
+         catch (Exception ex)
+         {
+             _logger.LogError(ex, "StartUpService.ExecuteAsync error");
 
-            _logger.LogInformation("StartUpService.ExecuteAsync finish");
-        }
-    }
-}
+             throw;
+         }
+
+         _logger.LogInformation("StartUpService.ExecuteAsync finish");
+     }
+ }
